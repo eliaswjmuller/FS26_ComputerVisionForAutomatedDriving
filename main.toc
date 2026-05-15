@@ -1,0 +1,64 @@
+\contentsline {section}{\numberline {1}Part I: Fundamentals}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Definitions}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Optical Autonomous Driving Sensors}{2}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Light Detection and Ranging (Lidar)}{3}{subsubsection.1.2.1}%
+\contentsline {paragraph}{Pulsed Lidar}{3}{subsubsection.1.2.1}%
+\contentsline {subparagraph}{Beam Configurations.}{3}{figure.caption.2}%
+\contentsline {subparagraph}{Pulse Waveform (Sinusoidal Form).}{3}{figure.caption.2}%
+\contentsline {subparagraph}{Linear System Model.}{3}{figure.caption.2}%
+\contentsline {subparagraph}{Impulse Response Decomposition.}{3}{figure.caption.2}%
+\contentsline {subparagraph}{Clear Weather Simplification.}{4}{figure.caption.2}%
+\contentsline {subparagraph}{Features of Pulsed Lidar.}{4}{figure.caption.2}%
+\contentsline {subparagraph}{Acquisition of 3D Point Clouds.}{4}{figure.caption.2}%
+\contentsline {subparagraph}{Scanning Mechanisms.}{4}{figure.caption.2}%
+\contentsline {subsubsection}{\numberline {1.2.2}Camera}{5}{subsubsection.1.2.2}%
+\contentsline {paragraph}{Pinhole Camera Model.}{5}{subsubsection.1.2.2}%
+\contentsline {paragraph}{Homogeneous Coordinates.}{5}{subsubsection.1.2.2}%
+\contentsline {paragraph}{Geometric Transformations.}{5}{subsubsection.1.2.2}%
+\contentsline {paragraph}{3D to 2D Perspective Projection.}{5}{subsubsection.1.2.2}%
+\contentsline {paragraph}{Complete Projection.}{5}{subsubsection.1.2.2}%
+\contentsline {paragraph}{Photometric Image Formation.}{5}{subsubsection.1.2.2}%
+\contentsline {subsubsection}{\numberline {1.2.3}Radar}{5}{subsubsection.1.2.3}%
+\contentsline {paragraph}{FMCW Scanning Radar.}{6}{subsubsection.1.2.3}%
+\contentsline {subsubsection}{\numberline {1.2.4}Sensor Distribution on Car}{6}{subsubsection.1.2.4}%
+\contentsline {section}{\numberline {2}Part II: Semantic Perception}{7}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Semantic Segmentation}{7}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}Definition and Basics}{7}{subsubsection.2.1.1}%
+\contentsline {paragraph}{Data Format.}{7}{definition.8}%
+\contentsline {paragraph}{Prediction Format.}{7}{definition.8}%
+\contentsline {paragraph}{Categorical Cross-Entropy Loss.}{7}{definition.8}%
+\contentsline {paragraph}{Evaluation Metrics.}{7}{definition.8}%
+\contentsline {subsubsection}{\numberline {2.1.2}Exemplar Driving Datasets}{7}{subsubsection.2.1.2}%
+\contentsline {subsubsection}{\numberline {2.1.3}Convolutional Neural Networks Primer}{7}{subsubsection.2.1.3}%
+\contentsline {paragraph}{Limitations of MLPs on Images.}{7}{subsubsection.2.1.3}%
+\contentsline {paragraph}{Discrete 2D Convolution.}{8}{Item.2}%
+\contentsline {paragraph}{Convolutional Layer: General Formulation.}{8}{Item.2}%
+\contentsline {subparagraph}{Single Convolutional Neuron (Linear Part).}{8}{Item.2}%
+\contentsline {subparagraph}{Element-wise Nonlinearity.}{8}{Item.2}%
+\contentsline {subparagraph}{Output Tensor.}{8}{Item.2}%
+\contentsline {subparagraph}{Parameter Count.}{8}{Item.2}%
+\contentsline {paragraph}{Pooling Layer.}{8}{Item.2}%
+\contentsline {paragraph}{Practical Variations.}{9}{Item.2}%
+\contentsline {paragraph}{Receptive Field.}{9}{Item.2}%
+\contentsline {paragraph}{CNN for Image Classification.}{9}{Item.2}%
+\contentsline {subsubsection}{\numberline {2.1.4}Encoder--Decoder Paradigm}{9}{subsubsection.2.1.4}%
+\contentsline {paragraph}{Naive: Sliding-Window Classification.}{9}{subsubsection.2.1.4}%
+\contentsline {paragraph}{End-to-End Architectures.}{9}{subsubsection.2.1.4}%
+\contentsline {paragraph}{Three Challenges.}{9}{subsubsection.2.1.4}%
+\contentsline {paragraph}{Fully Convolutional Networks (FCN).}{9}{subsubsection.2.1.4}%
+\contentsline {paragraph}{Naive Resolution Recovery.}{9}{subsubsection.2.1.4}%
+\contentsline {paragraph}{Encoder--Decoder.}{9}{subsubsection.2.1.4}%
+\contentsline {paragraph}{In-Network Upsampling.}{9}{subsubsection.2.1.4}%
+\contentsline {subparagraph}{Unpooling.}{9}{subsubsection.2.1.4}%
+\contentsline {subparagraph}{Transpose Convolution (Deconvolution).}{10}{subsubsection.2.1.4}%
+\contentsline {subsubsection}{\numberline {2.1.5}Fundamental Architectures and Modules}{10}{subsubsection.2.1.5}%
+\contentsline {paragraph}{U-Net.}{10}{subsubsection.2.1.5}%
+\contentsline {paragraph}{Atrous (Dilated) Convolution.}{10}{subsubsection.2.1.5}%
+\contentsline {paragraph}{Attention.}{10}{subsubsection.2.1.5}%
+\contentsline {paragraph}{Transformer Block.}{11}{subsubsection.2.1.5}%
+\contentsline {paragraph}{Transformers for Dense Prediction.}{11}{subsubsection.2.1.5}%
+\contentsline {paragraph}{Swin Transformer.}{11}{subsubsection.2.1.5}%
+\contentsline {paragraph}{Hierarchical Structure.}{11}{subsubsection.2.1.5}%
+\contentsline {section}{\numberline {3}Part III: Geometric Perception and Localization}{12}{section.3}%
+\contentsline {section}{\numberline {4}Part IV: Robust Perception: Multi-Modal, Multi-Domain and Multi-Agent Methods}{13}{section.4}%
+\contentsline {section}{\numberline {5}Part V: Temporal Perception}{14}{section.5}%

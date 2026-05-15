@@ -40,6 +40,17 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, calc}
 
+% Block-style paragraph / subparagraph headings (override default run-in style)
+\usepackage{titlesec}
+\titleformat{\paragraph}[block]
+  {\normalfont\normalsize\bfseries}{}{0pt}{}
+\titlespacing*{\paragraph}
+  {0pt}{1.4ex plus 0.6ex minus 0.2ex}{0.6ex plus 0.2ex}
+\titleformat{\subparagraph}[block]
+  {\normalfont\normalsize\bfseries\itshape}{}{0pt}{}
+\titlespacing*{\subparagraph}
+  {0pt}{0.9ex plus 0.4ex minus 0.1ex}{0.3ex plus 0.1ex}
+
 %fig shortcut
 \newcommand{\fig}[2]{
     \begin{figure}
@@ -288,6 +299,231 @@ Typical ADS platform uses $20$--$40$ sensors. Sensor placement affects covered F
 
 \newpage
 \section{Part II: Semantic Perception}
+\subsection{Semantic Segmentation}
+\subsubsection{Definition and Basics}
+\begin{definition}[Semantic Image Segmentation]
+Given a predefined class set $\mathcal{C} = \{1, \dots, C\}$, assign every pixel $\mathbf{x}_i$ of an input image $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$ a single class label $y_i \in \mathcal{C}$. No differentiation between distinct instances of the same class (cf.\ instance/panoptic segmentation).
+\end{definition}
+
+\paragraph{Data Format.}
+Supervised setup: dataset $\mathcal{D} = \{(\mathbf{I}^{(n)}, \mathbf{Y}^{(n)})\}_{n=1}^N$.
+\begin{itemize}
+    \item \textit{Input}: RGB image $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$.
+    \item \textit{Output / ground truth}: one-hot tensor $\mathbf{Y} \in \{0,1\}^{H \times W \times C}$ with $\sum_{c=1}^{C} Y_{h,w,c} = 1$ for every pixel $(h,w)$. One channel per class.
+\end{itemize}
+Indexing convention: $h \in \{1,\dots,H\}$ row, $w \in \{1,\dots,W\}$ column, $c \in \{1,\dots,C\}$ class channel, $k$ used as a dummy class index in sums.
+
+\paragraph{Prediction Format.}
+Model outputs a logits tensor $\mathbf{Z} \in \mathbb{R}^{H \times W \times C}$. Per-pixel softmax gives the soft prediction tensor $\hat{\mathbf{Y}} \in [0,1]^{H \times W \times C}$:
+\begin{equation*}
+    \hat{Y}_{h,w,c} = \frac{\exp(Z_{h,w,c})}{\sum_{k=1}^{C} \exp(Z_{h,w,k})}, \qquad \hat{\mathbf{Y}}_{h,w,:} \in \Delta^{C-1}, \qquad \text{Hard prediction: $\hat{y}_{h,w} = \arg\max_c \hat{Y}_{h,w,c}$.}
+\end{equation*}
+
+\paragraph{Categorical Cross-Entropy Loss.}
+Image-level loss as an explicit triple sum over spatial and class dimensions:
+\begin{equation*}
+    \mathcal{L}(\mathbf{I}) = -\frac{1}{HW} \sum_{h=1}^{H} \sum_{w=1}^{W} \sum_{c=1}^{C} Y_{h,w,c}\, \log \hat{Y}_{h,w,c}.
+\end{equation*}
+\textbf{Intuition:} One-hot $\mathbf{Y}$ collapses the inner $c$-sum to the single true-class term $-\log \hat{Y}_{h,w,\, y_{h,w}}$, leaving an average over $HW$ pixels.
+
+\paragraph{Evaluation Metrics.}
+\begin{itemize}
+    \item \textit{Pixel accuracy}: fraction of correctly classified pixels. Skewed by frequent classes (sky, road).
+    \item \textit{IoU (class $c$)}: $\mathrm{IoU}_c = \dfrac{|\hat{P}_c \cap P_c|}{|\hat{P}_c \cup P_c|}$, with $\hat{P}_c, P_c$ the predicted/GT pixel sets.
+    \item \textit{mIoU}: $\frac{1}{C}\sum_c \mathrm{IoU}_c$. More stringent than pixel accuracy; mean over classes prevents head-class bias.
+\end{itemize}
+
+\subsubsection{Exemplar Driving Datasets}
+\begin{center}
+\begin{tabular}{l|l|l}
+    \textbf{Dataset} & \textbf{Scale / resolution} & \textbf{Notes} \\ \hline
+    Cityscapes & 5k fine + 20k coarse, $1024\!\times\!2048$ & 30 classes / 8 categories; SOTA $\mathrm{mIoU} > 85\%$ \\
+    Mapillary Vistas & $4000^+\!\times\!3000^+$ & 66 classes (37 instance-level); global, multi-viewpoint \\
+    Foggy Cityscapes & inherits Cityscapes labels & fog simulation at varying densities \\
+    GTA5 & 24{,}966 frames, HR & label propagation via rendering pipeline ($\sim$7\,s/img) \\
+    ACDC & 4006 adverse-cond.\ images & fog/night/rain/snow + clear correspondences \\
+    ApolloScape & 140k pixel-level annot. & dense traffic \\
+    IDD & unstructured environments & unconventional classes, high intra-class diversity \\
+    WildDash & evaluation/testing & organized by visual hazards \\
+\end{tabular}
+\end{center}
+
+\subsubsection{Convolutional Neural Networks Primer}
+\paragraph{Limitations of MLPs on Images.}
+Vectorizing an $H \times W$ image as MLP input
+\begin{enumerate}
+    \item destroys 2D structure and local correlations; spatial invariances must be relearned;
+    \item explodes the parameter count (e.g.\ $400\!\times\!250$ image, 10k hidden $\Rightarrow$ $\sim\!10^9$ parameters in the first layer alone).
+\end{enumerate}
+
+\paragraph{Discrete 2D Convolution.}
+Slide the kernel $\mathbf{K} \in \mathbb{R}^{k_h \times k_w}$ over input $\mathbf{X}$; at each location multiply the overlapping pixel--weight pairs and sum:
+\begin{equation*}
+    (\mathbf{X} * \mathbf{K})[h,w] = \sum_{u=1}^{k_h} \sum_{v=1}^{k_w} X[h+u-1,\, w+v-1]\, K[u,v].
+\end{equation*}
+Formally a \textit{cross-correlation}; it differs from convolution proper by a kernel flip.
+
+\textbf{Intuition:} The operation is \textit{local}, \textit{linear}, and \textit{shift-equivariant} (commutes with translation). The same parameters are used across all spatial locations -- \textit{parameter sharing}. The 2D structure of the input is preserved in the output.
+
+\paragraph{Convolutional Layer: General Formulation.}
+At layer $\ell$, the activation tensor of the previous layer
+\begin{equation*}
+    \mathbf{X}^{(\ell-1)} \in \mathbb{R}^{H_{\ell-1} \times W_{\ell-1} \times C_{\ell-1}}
+\end{equation*}
+is convolved with $C_\ell$ \textit{3D kernels}
+\begin{equation*}
+    \mathbf{K}^{(\ell, k)} \in \mathbb{R}^{k_H \times k_W \times C_{\ell-1}}, \qquad k = 1, \dots, C_\ell,
+\end{equation*}
+each paired with a scalar bias $b_k^{(\ell)}$. One distinct kernel channel exists for every input channel; the kernel is therefore a 3D tensor whose depth matches $C_{\ell-1}$.
+
+\subparagraph{Single Convolutional Neuron (Linear Part).}
+For output channel $k$ at spatial location $(h, w)$, the layer's linear response is a 2D convolution per input channel, summed across channels with the bias:
+\begin{equation*}
+    Z^{(\ell)}_{h, w, k} = b_k^{(\ell)} + \sum_{c=1}^{C_{\ell-1}} \sum_{u=1}^{k_H} \sum_{v=1}^{k_W} X^{(\ell-1)}_{h+u-1,\, w+v-1,\, c}\; K^{(\ell, k)}_{u, v, c}.
+\end{equation*}
+\textbf{Intuition:} The 2D cross-correlation generalizes to multi-channel inputs as a triple sum (two spatial $+$ one channel dim); the 3D kernel ``stacks'' the channel-wise correlations and the bias offsets the result. Parameters are shared across all spatial neurons of the same output channel.
+
+\subparagraph{Element-wise Nonlinearity.}
+A nonlinear activation $\sigma$ is applied independently to every scalar entry of $\mathbf{Z}^{(\ell)}$:
+\begin{equation*}
+    X^{(\ell)}_{h, w, k} = \sigma\!\left( Z^{(\ell)}_{h, w, k} \right).
+\end{equation*}
+The conv-and-bias step and the nonlinearity are conceptually separate sub-layers; $\sigma$ couples neither spatial positions nor channels.
+
+\subparagraph{Output Tensor.}
+Stacking the $C_\ell$ activated feature maps gives the 3D output tensor
+\begin{equation*}
+    \mathbf{X}^{(\ell)} \in \mathbb{R}^{H_\ell \times W_\ell \times C_\ell},
+\end{equation*}
+i.e.\ multiple features per spatial location, one per output channel. $C_\ell$ is a layer hyperparameter
+
+\subparagraph{Parameter Count.}
+Per output channel: $k_H k_W C_{\ell-1}$ kernel weights $+$ $1$ bias. Total parameters in layer $\ell$:
+\begin{equation*}
+    \#\theta^{(\ell)} = C_\ell \,(\, k_H\, k_W\, C_{\ell-1} + 1\,).
+\end{equation*}
+\textbf{Intuition:} Cost scales with kernel footprint and the product of input/output channels, \textit{not} with the spatial size of the input -- this is what makes convolutional layers tractable on high-resolution images.
+
+\paragraph{Pooling Layer.}
+Non-parametric, (sub)differentiable downsampling. Hyperparameters: window size, stride. Max pooling provides robustness to local input variations and enables higher feature dimensionality without spatial-memory explosion.
+
+\paragraph{Practical Variations.}
+\begin{itemize}
+    \item \textit{Padding}: valid convolution shrinks spatial dims. \textit{Same} mode pads by $\lfloor k/2 \rfloor$ (odd $k$) to preserve them. Modes: zero, replicate, reflect.
+    \item \textit{Strided convolution}: kernel slides with step $s>1$. Motivation: faster receptive-field growth, spatial downsampling integrated into the conv. Often in early layers but pooling more common for downsampling. Higher stride $\rightarrow$ faster increase of receptive field size
+\end{itemize}
+Output spatial size (per dim):
+\begin{equation*}
+    H_{\mathrm{out}} = \left\lfloor \frac{H_{\mathrm{in}} + 2p - k}{s} \right\rfloor + 1,
+\end{equation*}
+where $H_{\mathrm{in}}$: input size, $k$: kernel size, $p$: padding width per border, $s$: stride.
+
+\paragraph{Receptive Field.}
+Region of the input on which a neuron's output depends. Grows with depth, kernel size, and stride. Deep CNN layers eventually attain global receptive fields covering the entire image.
+
+\paragraph{CNN for Image Classification.}
+Architecture: (conv $+$ activation $+$ pool)$^L \to$ flatten $\to$ FC layers $\to$ softmax. Final FC layers learn global interdependencies needed for the image-level prediction.
+
+\subsubsection{Encoder--Decoder Paradigm}
+\paragraph{Naive: Sliding-Window Classification.}
+Extract a patch around each pixel, classify its center with a CNN. \\
+\textit{Problems}: massive redundant computation; no global context (esp.\ for large objects). Does not scale to HR images.
+
+\paragraph{End-to-End Architectures.}
+Single forward pass from $\mathbf{I}$ to full label map $\hat{\mathbf{Y}}$. Goal: share computation across all spatial locations. Strategy: adapt classification CNNs to dense prediction.
+
+\paragraph{Three Challenges.} (I) \textit{Reduced feature resolution} from repeated striding/pooling, (II) \textit{Multi-scale objects}, (III) \textit{Reduced localization accuracy} from CNN invariance
+
+\paragraph{Fully Convolutional Networks (FCN).}
+Replace the FC layers of a classification network with convolutional layers $\Rightarrow$ coarse high-level feature maps at low resolution. Per-pixel prediction at original image resolution then requires upsampling.
+
+\paragraph{Naive Resolution Recovery.}
+Remove pooling/striding entirely. Requires larger kernels for the same receptive field; every feature map $\mathbf{X}^{(\ell)}$ stays at $HW$ instead of shrinking geometrically, so activation memory $\sum_\ell H_\ell W_\ell C_\ell = HW \sum_\ell C_\ell$ scales linearly with depth (no geometric decay), and the same factor inflates per-layer FLOPs $\Rightarrow$ heavy compute/memory cost and overfitting risk.
+
+\paragraph{Encoder--Decoder.}
+\begin{itemize}
+    \item \textit{Encoder}: maps $\mathbf{I}$ to a low-resolution, high-dimensional feature tensor; aggregates context.
+    \item \textit{Decoder}: upsamples encoder features back to image resolution while reducing feature dimensionality.
+\end{itemize}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{img/encoder_decoder.png}
+    \caption{Encoder--decoder schematic. Spatial resolution contracts inside the encoder (high$\to$low) and is recovered by the decoder (low$\to$high); feature dimensionality follows the opposite trajectory.}
+    \label{fig:encoder_decoder}
+\end{figure}
+
+\paragraph{In-Network Upsampling.}
+\subparagraph{Unpooling.} During encoder max-pooling, store argmax positions in \textit{switch variables}; in the decoder, place each activation back at its recorded location. Produces an enlarged but \textit{sparse} feature map. Not learnable + symetric architecture for corresponding pairs.
+
+\subparagraph{Transpose Convolution (Deconvolution).} Learnable upsampling for dense feature maps. Each input scalar weights a copy of the kernel; the weighted kernel is placed into the output at a location determined by the input position and the stride. Where output positions overlap across different input pixels, the contributions are summed. (Crop might be required to get exact target size)
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\linewidth]{img/transpose_conv_1d.png}
+    \caption{1D transpose convolution. Input $(a,b)$ weights copies of filter $(x,y,z)$; the weighted filters are placed into the output and summed where they overlap (here only the middle entry, $az + bx$).}
+    \label{fig:transpose_conv_1d}
+\end{figure}
+
+\subsubsection{Fundamental Architectures and Modules}
+\paragraph{U-Net.}
+Symmetric encoder--decoder with \textit{skip connections}: at each decoder stage, high-resolution encoder features are concatenated with upsampled decoder features along the channel dim, followed by convolutions.
+\begin{itemize}
+    \item Contracting path: $\downarrow$ ``Where'', $\uparrow$ ``What'' (context).
+    \item Expansive path: transpose convolutions $+$ concatenations recover spatial detail.
+\end{itemize}
+\textbf{Intuition:} Skip connections inject fine-grained localization into the decoder, addressing the resolution challenge.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{img/unet.png}
+    \caption{U-Net: U-shaped encoder--decoder with skip connections (yellow arrows) copying high-resolution features from the contracting to the expansive path.}
+    \label{fig:unet}
+\end{figure}
+
+\paragraph{Atrous (Dilated) Convolution.}
+The \textit{effective} receptive field is smaller than the formal one: border connections are sparse. Atrous convolution inserts holes between kernel taps. For rate $r$:
+\begin{equation*}
+    (\mathbf{X} *_r \mathbf{K})[i,j] = \sum_{u,v} X[i+ru,\, j+rv]\, K[u,v].
+\end{equation*}
+Standard convolution corresponds to $r=1$. Stacking atrous convolutions with growing $r$ yields \textit{exponential} expansion of receptive field size without resolution loss or coverage gaps. \\
+
+\textbf{Intuition:} Less need for pooling: receptive fields grow without spatial downsampling, preserving feature map resolution for dense prediction.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{img/atrous_rates.png}
+    \caption{Atrous convolution at rates $r=1,2,4$ (red dots: kernel taps). Sampling spacing scales with $r$, expanding the receptive field exponentially while the number of weights stays fixed.}
+    \label{fig:atrous_rates}
+\end{figure}
+
+\paragraph{Attention.}
+Soft, content-based indexing across all tokens (DB analogy). For tokens $\mathbf{X} \in \mathbb{R}^{N \times d}$, learned projections $\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V$ produce
+\begin{equation*}
+    \mathbf{Q} = \mathbf{X}\mathbf{W}_Q, \quad \mathbf{K} = \mathbf{X}\mathbf{W}_K, \quad \mathbf{V} = \mathbf{X}\mathbf{W}_V.
+\end{equation*}
+\begin{itemize}
+    \item \textit{Query}: representation of the token used to compare it with other tokens.
+    \item \textit{Key}: reference representation by which other tokens are compared against the token.
+    \item \textit{Value}: output representation contributed by the token when it gets ``indexed''.
+\end{itemize}
+Scaled dot-product attention:
+\begin{equation*}
+    \mathrm{Attn}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \mathrm{softmax}\!\left(\frac{\mathbf{Q}\mathbf{K}^\top}{\sqrt{d_k}}\right) \mathbf{V}.
+\end{equation*}
+Softmax taken along rows (per-query distribution). Division by $\sqrt{d_k}$ keeps gradient magnitudes well-scaled. Complexity: $\mathcal{O}(N^2 d)$ -- quadratic in tokens.\\
+
+\textbf{Intuition:} Query/key match measures relevance of every other token; the row-softmax weights aggregate values $\Rightarrow$ each token is a learned linear mixture of all others. Globally connected receptive field at every layer.
+
+\paragraph{Transformer Block.} Multi-head self-attention (concatenate $h$ parallel attention heads $\to$ linear projection) followed by a position-wise MLP. Residual connections and layer normalization around each sub-layer.
+
+\paragraph{Transformers for Dense Prediction.}
+ViT-style large patches lose spatial precision $\Rightarrow$ poor for segmentation. Naive fix: restrict attention to local windows of $M \times M$ patches. Complexity becomes \textit{linear} in the number of patches (for fixed $M$). Drawback: receptive field bounded by the window across all layers.
+
+\paragraph{Swin Transformer.}
+\textit{Shifted-window} attention: alternate between W-MSA (window-based multi-head self-attention) and SW-MSA (shifted-window MSA). The window grid in SW-MSA is offset relative to W-MSA, so a query $q$'s receptive field at layer $\ell+1$ is the union of layer-$\ell$ windows that overlap with $q$'s current local window.\\
+
+\textbf{Intuition:} With enough shifts, local windowed attention reaches large receptive fields rapidly while keeping per-layer cost linear.
+
+\paragraph{Hierarchical Structure.}
+\textit{Patch merging} concatenates features of each $2\!\times\!2$ neighboring patch group and applies a linear projection: tokens reduce by $4\times$ ($2\times$ spatial downsampling), output dim set to $2C$. Yields a multi-scale feature pyramid; Swin can serve as a drop-in CNN-backbone replacement for the encoder of standard segmentation networks.
 
 \newpage
 \section{Part III: Geometric Perception and Localization}
