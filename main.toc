@@ -33,7 +33,7 @@
 \contentsline {paragraph}{Limitations of MLPs on Images.}{7}{subsubsection.2.1.3}%
 \contentsline {paragraph}{Discrete 2D Convolution.}{8}{Item.2}%
 \contentsline {paragraph}{Convolutional Layer: General Formulation.}{8}{Item.2}%
-\contentsline {subparagraph}{Single Convolutional Neuron (Linear Part).}{8}{Item.2}%
+\contentsline {subparagraph}{Single Convolutional Neuron.}{8}{Item.2}%
 \contentsline {subparagraph}{Element-wise Nonlinearity.}{8}{Item.2}%
 \contentsline {subparagraph}{Output Tensor.}{8}{Item.2}%
 \contentsline {subparagraph}{Parameter Count.}{8}{Item.2}%
@@ -53,12 +53,72 @@
 \contentsline {subparagraph}{Transpose Convolution (Deconvolution).}{10}{subsubsection.2.1.4}%
 \contentsline {subsubsection}{\numberline {2.1.5}Fundamental Architectures and Modules}{10}{subsubsection.2.1.5}%
 \contentsline {paragraph}{U-Net.}{10}{subsubsection.2.1.5}%
-\contentsline {paragraph}{Atrous (Dilated) Convolution.}{10}{subsubsection.2.1.5}%
-\contentsline {paragraph}{Attention.}{10}{subsubsection.2.1.5}%
-\contentsline {paragraph}{Transformer Block.}{11}{subsubsection.2.1.5}%
-\contentsline {paragraph}{Transformers for Dense Prediction.}{11}{subsubsection.2.1.5}%
-\contentsline {paragraph}{Swin Transformer.}{11}{subsubsection.2.1.5}%
-\contentsline {paragraph}{Hierarchical Structure.}{11}{subsubsection.2.1.5}%
-\contentsline {section}{\numberline {3}Part III: Geometric Perception and Localization}{12}{section.3}%
-\contentsline {section}{\numberline {4}Part IV: Robust Perception: Multi-Modal, Multi-Domain and Multi-Agent Methods}{13}{section.4}%
-\contentsline {section}{\numberline {5}Part V: Temporal Perception}{14}{section.5}%
+\contentsline {paragraph}{Atrous (Dilated) Convolution.}{10}{figure.caption.4}%
+\contentsline {subparagraph}{Stride vs Atrous.}{11}{figure.caption.5}%
+\contentsline {paragraph}{Attention.}{11}{figure.caption.5}%
+\contentsline {paragraph}{Transformer Block.}{11}{figure.caption.5}%
+\contentsline {paragraph}{Transformers for Dense Prediction (Computer Vision).}{11}{figure.caption.5}%
+\contentsline {paragraph}{Swin Transformer.}{11}{figure.caption.5}%
+\contentsline {subparagraph}{Hierarchical Structure.}{11}{figure.caption.5}%
+\contentsline {subsection}{\numberline {2.2}Object Detection}{11}{subsection.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.1}Fundamentals and Definitions}{11}{subsubsection.2.2.1}%
+\contentsline {paragraph}{Evaluation.}{11}{definition.9}%
+\contentsline {subsubsection}{\numberline {2.2.2}Two Stage R-CNN}{12}{subsubsection.2.2.2}%
+\contentsline {paragraph}{R-CNN}{12}{subsubsection.2.2.2}%
+\contentsline {paragraph}{Fast R-CNN}{12}{Item.6}%
+\contentsline {subparagraph}{(Multi-Task) Loss}{12}{Item.11}%
+\contentsline {paragraph}{Faster R-CNN}{12}{Item.11}%
+\contentsline {subparagraph}{RPN Loss \& Anchor Assignment}{13}{figure.caption.6}%
+\contentsline {paragraph}{Faster R-CNN with Feature Pyramid Network (FPN)}{13}{figure.caption.6}%
+\contentsline {subparagraph}{Issues with Indirect Detectors}{13}{figure.caption.6}%
+\contentsline {subsubsection}{\numberline {2.2.3}Direct Detectors}{14}{subsubsection.2.2.3}%
+\contentsline {paragraph}{Direct Set Prediction}{14}{subsubsection.2.2.3}%
+\contentsline {paragraph}{Detection Transformer}{14}{subsubsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.3}Instance Segmentation}{15}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}Mask R-CNN}{15}{subsubsection.2.3.1}%
+\contentsline {paragraph}{Mask R-CNN Loss}{15}{Item.19}%
+\contentsline {subsection}{\numberline {2.4}Panoptic Segmentaton}{16}{subsection.2.4}%
+\contentsline {subsubsection}{\numberline {2.4.1}Fundamentals and Definitions}{16}{subsubsection.2.4.1}%
+\contentsline {paragraph}{Panoptic Quality (PQ).}{16}{definition.11}%
+\contentsline {subsubsection}{\numberline {2.4.2}Instance-semantic Framework for Panoptic Segmentation}{16}{subsubsection.2.4.2}%
+\contentsline {paragraph}{Baseline: Merge Independent Predictions}{16}{subsubsection.2.4.2}%
+\contentsline {paragraph}{Panoptic FPN: Shared Backbone}{16}{subsubsection.2.4.2}%
+\contentsline {subsubsection}{\numberline {2.4.3}Unified Mask-based Framework for Segmentation}{17}{subsubsection.2.4.3}%
+\contentsline {paragraph}{Segmentation as Mask-based Classification}{17}{subsubsection.2.4.3}%
+\contentsline {paragraph}{MaskFormer}{17}{subsubsection.2.4.3}%
+\contentsline {subparagraph}{Mask Prediction}{18}{figure.caption.9}%
+\contentsline {subparagraph}{Same Architecture, Different Weights}{18}{figure.caption.9}%
+\contentsline {subparagraph}{Inference}{18}{figure.caption.9}%
+\contentsline {paragraph}{Mask2Former}{18}{figure.caption.9}%
+\contentsline {section}{\numberline {3}Part III: Geometric Perception and Localization}{19}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Depth and 3D Estimation}{19}{subsection.3.1}%
+\contentsline {paragraph}{Ground Truth.}{19}{subsection.3.1}%
+\contentsline {paragraph}{Evaluation Metrics}{19}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}Supervised Methods}{19}{subsubsection.3.1.1}%
+\contentsline {paragraph}{P3Depth.}{19}{subsubsection.3.1.1}%
+\contentsline {subparagraph}{Plane Coefficient Representation}{19}{subsubsection.3.1.1}%
+\contentsline {subparagraph}{Injecting Regularities}{20}{subsubsection.3.1.1}%
+\contentsline {subsubsection}{\numberline {3.1.2}Stereo Depth Estimation}{20}{subsubsection.3.1.2}%
+\contentsline {subparagraph}{Projection \& Disparity}{21}{figure.caption.11}%
+\contentsline {subparagraph}{Visible Region}{21}{figure.caption.11}%
+\contentsline {subparagraph}{Design Trade-offs \& Remarks}{21}{figure.caption.11}%
+\contentsline {subparagraph}{Stereo Matching Algorithm and Siamese Networks.}{21}{figure.caption.11}%
+\contentsline {subsubsection}{\numberline {3.1.3}Self-Supervised Monocular Depth Estimation from Stereo}{22}{subsubsection.3.1.3}%
+\contentsline {subsubsection}{\numberline {3.1.4}Self-Supervised Depth and Motion Estimation from Video}{22}{subsubsection.3.1.4}%
+\contentsline {subsection}{\numberline {3.2}3D Classification, Segmentation, and Detection}{23}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Foundations and Definitions}{23}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}3D Classification and Semantic Segmentation on Point Clouds}{23}{subsubsection.3.2.2}%
+\contentsline {paragraph}{PointNet.}{23}{subsubsection.3.2.2}%
+\contentsline {subparagraph}{PointNet Classification Network}{23}{figure.caption.14}%
+\contentsline {subparagraph}{PointNet Segmentation Network}{23}{figure.caption.15}%
+\contentsline {subparagraph}{PointNet Limitations}{24}{figure.caption.16}%
+\contentsline {paragraph}{PointNet++}{24}{figure.caption.16}%
+\contentsline {subparagraph}{Set Abstraction Levels}{24}{figure.caption.16}%
+\contentsline {subsubsection}{\numberline {3.2.3}3D Object Detection on Point Clouds}{25}{subsubsection.3.2.3}%
+\contentsline {paragraph}{VoxelNet}{25}{subsubsection.3.2.3}%
+\contentsline {subparagraph}{Bounding Box Regression}{25}{Item.26}%
+\contentsline {subparagraph}{Loss}{26}{Item.26}%
+\contentsline {paragraph}{PointRCNN}{26}{Item.26}%
+\contentsline {subsection}{\numberline {3.3}3D Reconstruction and Localization}{27}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Part IV: Robust Perception: Multi-Modal, Multi-Domain and Multi-Agent Methods}{28}{section.4}%
+\contentsline {section}{\numberline {5}Part V: Temporal Perception}{29}{section.5}%
