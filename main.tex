@@ -143,6 +143,13 @@ Real beams diverge; receivers have finite FOV. Two configurations:
      The \textbf{crossover function} $\xi(R) \in [0,1]$ gives the fraction of the illuminated area observed by the receiver as a function of range. For bistatic: $\xi(R)=0$ at short range (no crossover), $\xi(R)=1$ beyond some $R_2$ (full crossover).
 \end{itemize}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{img/LidarBistatic.png}
+    \caption{Lidar Bistatic Beam Configuration}
+    \label{fig:LidarBistatic}
+\end{figure}
+
 \subparagraph{Pulse Waveform (Sinusoidal Form).}
 \begin{equation*}
     P_T(t) = \begin{cases} P_0 \sin^2\!\left(\dfrac{\pi}{2\tau_H}\, t\right), & 0 \leq t \leq 2\tau_H, \\ 0, & \text{otherwise.} \end{cases}
@@ -164,7 +171,7 @@ where $P_R(R)$: range-dependent received power, $H(R)$: impulse response of the 
     H(R) = H_C(R)\, H_T(R)
 \end{equation*}
 \begin{itemize}
-    \item \textit{Optical channel}: $H_C(R) = \dfrac{T^2(R)}{R^2}\,\xi(R)$, \quad where $T(R) = \exp(-\alpha R)$ is the one-way transmission loss ($\alpha$ depends on visibility, assumes homogeneous scattering medium).
+    \item \textit{Optical channel} (medium): $H_C(R) = \dfrac{T^2(R)}{R^2}\,\xi(R)$, \quad where $T(R) = \exp(-\alpha R)$ is the one-way transmission loss ($\alpha$ depends on visibility, assumes homogeneous scattering medium). Similar to what we see in NeRF or Fog Simulation, but squared, since light must travel back and forth.
     \item \textit{Target}: $H_T(R) = \rho_0\,\delta(R - R_0)$ in clear weather, where $\rho_0$ is the differential reflectivity.
 \end{itemize}
  
@@ -255,9 +262,9 @@ Notation: ${}^{F}\mathbf{P}$ denotes coordinates of point $\mathbf{P}$ in frame 
 Given a 3D point $\mathbf{P}_c = (x_c, y_c, z_c)^T$ in camera coordinates, projection to 2D homogeneous pixel coordinates $\tilde{\mathbf{x}}_s$:
 \begin{equation*}
     \tilde{\mathbf{x}}_s \sim \mathbf{K}\, \mathbf{P}_c, \qquad
-    \mathbf{K} = \begin{bmatrix} f & s & c_x \\ 0 & f & c_y \\ 0 & 0 & 1 \end{bmatrix}
+    \mathbf{K} = \begin{bmatrix} f_x & s & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}
 \end{equation*}
-where $f$: focal length, $(c_x, c_y)$: principal point, $K$ encoding the camera intinsics (5DOF)\\
+where $f_x, f_y$: focal lengths, $s$: skew, $(c_x, c_y)$: principal point, $K$ encoding the camera intrinsics (5 DOF)\\
  
 \textbf{Intuition:} Derived from similar triangles starting with: $-(x_s - c_x)/x_c = f/(-z_c)$.\\
  
@@ -273,7 +280,7 @@ where $f$: focal length, $(c_x, c_y)$: principal point, $K$ encoding the camera 
 Digital imaging pipeline (scene radiance $\to$ optics $\to$ sensor $\to$ ISP $\to$ output), BRDF-based (Bidirectiional Reflectance Distribution Function) rendering equation, Lambertian vs.\ specular reflection. (details omitted)
 
 \subsubsection{Radar}
-\textbf{Characteristics}: Active sensor, $70$--$80$\,GHz (wavelengths $\sim$ few mm), measures \textit{range and velocity}. Robust to fog/rain/snow (wavelength $\gg$ particle size $\Rightarrow$ no scattering). Large horizontal FOV, very narrow vertical FOV. Low azimuthal resolution ($\approx$ measurements for $360\deg$), high range resolution. Low frame rate. Range: $200$--$600$\,m.
+\textbf{Characteristics}: Active sensor, $70$--$80$\,GHz (wavelengths $\sim$ few mm), measures \textit{range and velocity}. Robust to fog/rain/snow (wavelength $\gg$ particle size $\Rightarrow$ no scattering). Large horizontal FOV, very narrow vertical FOV. Low azimuthal resolution (few azimuth bins across the $360^\circ$ sweep), high range resolution. Low frame rate. Range: $200$--$600$\,m.
 
 \paragraph{FMCW Scanning Radar.}
 Two waveform types: fixed-frequency pulses and frequency-modulated continuous wave (FMCW). Output is discretized into $M$ azimuths $\times$ $N$ range bins; per-bin measurement is received power.\\
@@ -547,15 +554,15 @@ Generally, we apply a number of predefined thresholds (loose to tight) and avera
 All per class APs are average at the end for the full AP $\rightarrow$ \textit{average (class), average (IoU thresholds), average (precision @ different recall levels) precision}.
 
 \subsubsection{Two Stage R-CNN}
-\textit{Region-based} CNNs use per-region computation for the detection task, rather than considering the full input in one loss funciton target.
+\textit{Region-based} CNNs use per-region computation for the detection task, rather than considering the full input in one loss function target.
 So the classifier only ever sees some number of potentially high quality regions, not the full $H_f W_f$ anchor grid.\\
 \textit{Note:} One-Stage detectors, have no seperate proposal step. Every anchor is directly classified into $K+1$ classes and regresseed in a single forward pass (no proposal, every anchor, 1 box regression, faster, but lower quality).
 
 \paragraph{R-CNN}
 \begin{enumerate}
-    \item \textbf{RPN:} off-the-shelve region proposal network (trained disjoint from this architecture).
+    \item \textbf{RPN:} off-the-shelf region proposal network (trained disjoint from this architecture).
     \item \textbf{Crop \& Warp} the patches for fixed network input size
-    \item \textbf{Forward} though network for feature map $\rightarrow$ VERY SLOW per-region pass required ($\approx 2000$)
+    \item \textbf{Forward} through network for feature map $\rightarrow$ VERY SLOW per-region pass required ($\approx 2000$)
     \item \textbf{Linear Object Classifier} plus a parallel \textbf{Box Regressor} for a refined proposal localization
 \end{enumerate}
 
@@ -565,11 +572,11 @@ So the classifier only ever sees some number of potentially high quality regions
     \item unchanged RPN $r(I) \rightarrow$ Region Proposals have VERY POOR RECALL and are slow 
     \item \textbf{RoI Pooling} for a featurized repr of each proposal $g_i = g(f_I,r_i)$: project proposal to feature-map coords (divide by FCN stride $s$), snap fractional coords to integer feature-map cells, split into fixed $k\times k$ grid, max-pool per bin $\rightarrow$ fixed $k\times k\times C$ output regardless of proposal size.
     \item \textbf{ConvNet/MLP} for preprocessing per proposal feature (input already has lower spatial resolution since we use feature maps) $\rightarrow h(g_i)$
-    \item \textbf{Multiple Heads} can be attached to these feature maps for task-specific preditions.
+    \item \textbf{Multiple Heads} can be attached to these feature maps for task-specific predictions.
 \end{enumerate}
 
 \subparagraph{(Multi-Task) Loss}
-Since we have two sibling output layers we need to cobine their losses for joint training,.
+Since we have two sibling output layers we need to combine their losses for joint training.
 \begin{itemize}
     \item $L_{cls} (p,u) = - \log p_u \qquad$ as discrete probability dist per RoI over K+1 categories (CE-loss)
     \item $L_{loc}(t^u,v) = \sum_{i \in \{x,y,w,h\}} \mathrm{smooth}_{L_1}(t^u_i - v_i) \qquad$ summing per-coord robust offsets, with $\mathrm{smooth}_{L_1}(x) = 0.5 x^2$ if $|x|<1$ else $|x| - 0.5$ (Huber: $L_2$ near 0, $L_1$ in tails $\rightarrow$ less outlier-sensitive). Predicts $t^k = (t^k_x, t^k_y, t^k_w, t^k_h)$ for each of the K categories.
@@ -614,7 +621,7 @@ $\mathcal{L}_\text{cls}$ runs over \textit{all} pos+neg anchors; $\mathcal{L}_\t
 
 
 \paragraph{Faster R-CNN with Feature Pyramid Network (FPN)}
-Rather tan using a same scale feature map, we include a multi-scale feature pyramid, i.e., $f_I$ is no longer just one repr at one scale. 
+Rather than using a same scale feature map, we include a multi-scale feature pyramid, i.e., $f_I$ is no longer just one repr at one scale. 
 This improves \textit{Scale Invariance} and \textit{Localization Equivariance}.\\
 
 Different Strategies:
@@ -712,21 +719,21 @@ Builds on the Fast R-CNN multi-task loss by adding a per-pixel mask term. For ea
 \end{itemize}
 
 
-\subsection{Panoptic Segmentaton}
+\subsection{Panoptic Segmentation}
 \subsubsection{Fundamentals and Definitions}
-\begin{definition}[Panoptic Segentation]
-    For a given, pre-defined set of classes $\mathcal{C}$, asiigne each pixel in the input image indivudually to a signle class. For each pixel, that belong to a countable class, assign it to a unique instance.
+\begin{definition}[Panoptic Segmentation]
+    For a given, pre-defined set of classes $\mathcal{C}$, assign each pixel in the input image individually to a single class. For each pixel, that belong to a countable class, assign it to a unique instance.
 \end{definition}
 
-Panoptic Segmentation unifies the instance and classical semantic segmentation into one task, using a uniform output format and a unifor evaluation metric (\textbf{Panoptic Quality}).\\
+Panoptic Segmentation unifies the instance and classical semantic segmentation into one task, using a uniform output format and a uniform evaluation metric (\textbf{Panoptic Quality}).\\
 \textbf{Data} is in generic supervised learning form: $\mathcal{D} = \{(x_i,y_i): i = 1, \dots, N\}$ . Thus, with $Z$ as the max number of instances for a given class: 
 \begin{align*}
     \text{Input (RGB):}& \quad x_i \mathrel{\hat{=}} \mathbf{I}_i \in \mathbb{R}^{H\times W \times 3}\\
     \text{Output:} &\quad \mathbf{Y}_i \in \{1,\dots, C\}\times \{1, \dots, Z\}^{H \times W}\\
-    \text{Loss:}& \text{ depending on the archtecture (instance-semantic or unified mask-based)}
+    \text{Loss:}& \text{ depending on the architecture (instance-semantic or unified mask-based)}
 \end{align*}
 
-For each pixel $i$: \texttt{(class, instance count (if countable))}. Contrary to instance segementation we have \textbf{no prediction overlaps} (but arbitrary instance ordering), and \textbf{no instance confidence scores}.\\
+For each pixel $i$: \texttt{(class, instance count (if countable))}. Contrary to instance segmentation we have \textbf{no prediction overlaps} (but arbitrary instance ordering), and \textbf{no instance confidence scores}.\\
 
 
 \paragraph{Panoptic Quality (PQ).}
@@ -909,7 +916,7 @@ Two depth predictions are then computed:
 Using a stereo setup we can estimate depth using triangulation. \\
 
 We consider \textit{identical camers, with coplanar image planes, aligned x-axes and the convention of setting the left camera frame to the world coords.} Thus have a translation along the known baseline (in meters) and no rotation.
-\vspace{-0.5cm}
+\vspace{-0.4cm}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{img/Stereo_Setup.png}
@@ -1006,15 +1013,15 @@ $p_s \sim K\, \hat T_{t\rightarrow s}\, \hat D_t(p_t)\, K^{-1} p_t$
 
 \subsection{3D Classification, Segmentation, and Detection}
 \subsubsection{Foundations and Definitions}
-\textbf{Representations:} many possibilities including multi-viewm volumetric (voxels), part assembly, \textbf{Point Clouds}, mesh (graph CNN), and implicip shapes (functional repr.) $\rightarrow$ focus on point clouds since close to raw sensor data and common standard. Point Clouds can either be converted into other reprs to feed into NNs or we can do \textit{feature learning} directly on point clouds (our focus)\\
-\textbf{3D Perception Tasks}: Classification, Segmentation, Segmentation, Detection, Correspondences, Reconstruction
+\textbf{Representations:} many possibilities including multi-view, volumetric (voxels), part assembly, \textbf{Point Clouds}, mesh (graph CNN), and implicit shapes (functional repr.) $\rightarrow$ focus on point clouds since close to raw sensor data and common standard. Point Clouds can either be converted into other reprs to feed into NNs or we can do \textit{feature learning} directly on point clouds (our focus)\\
+\textbf{3D Perception Tasks}: Classification, Segmentation, Detection, Correspondences, Reconstruction
 
 \subsubsection{3D Classification and Semantic Segmentation on Point Clouds}
 \paragraph{PointNet.}
 Point Cloud based end-to-end learning for \textit{scattered, unordered, sparse, noisy} point data for various tasks. Challenges caused by the data foundation:
 \begin{itemize}
     \item \textbf{Unordered} input point set: Model requires invariance to $\text{N}!$ permutations (N orderless points). This can be achieved via \textit{Symmetric Functions} (c.f. GNNs): Trivial Solution is the \textit{MLP with max pooling} (across features): $f(x_1, \dots, x_n) = \gamma \circ g(h(x_1), \dots, h(x_n))$ symmetric if $g$ is symmetric:\\
-    $\underbrace{x}_{\text{input}} \rightarrow \underbrace{\texttt{MLP}(x_i)}_{h} \rightarrow \underbrace{\texttt{max\_pool}}_{g} \rightarrow \underbrace{\texttt{MLP}}_{\gamma} \qquad $ $\gamma$ ensures permutation invariance 
+    $\underbrace{x}_{\text{input}} \rightarrow \underbrace{\texttt{MLP}(x_i)}_{h} \rightarrow \underbrace{\texttt{max\_pool}}_{g} \rightarrow \underbrace{\texttt{MLP}}_{\gamma} \qquad $ the symmetric $g$ (max-pool) is what ensures permutation invariance; $\gamma$ just maps the aggregated feature to the output
     \item \textbf{Geometric Transformation Invariance}: rotations / Euclidean transformations must not alter results. Solution: \textbf{T-Net} -- a mini vanilla PointNet whose output is a transformation \textit{matrix} (not a class score), applied by matrix-mult to align inputs to a \textit{canonical space}. Used twice: $3\times 3$ on raw $n\times 3$ points (\textit{input} T-Net), $64\times 64$ on intermediate $n\times 64$ features (\textit{feature} T-Net). Data-dependent $\rightarrow$ no hard-coded rotations.
 \end{itemize}
 \vspace{-0.3cm}
@@ -1022,7 +1029,7 @@ Point Cloud based end-to-end learning for \textit{scattered, unordered, sparse, 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{img/T-Net.png}
-    \caption{T-Net for Input Aligmnet by Transformer Network}
+    \caption{T-Net for Input Alignment by Transformer Network}
     \label{fig:t-net}
 \end{figure}
 \vspace{-0.3cm}
@@ -1090,10 +1097,10 @@ Closer subsampled points contribute more; typically $k=3$, $p=2$. Density-aware 
 \subsubsection{3D Object Detection on Point Clouds}
 \textbf{Target}: 3D BB around each object given \textit{3 DOF for size, 3 DOF for center, and 1 DOF for rotation} - assuming object on ground (no vertical rotation).\\
 
-\textbf{LiDAR} provides reliable depth information used to localize and characterize objects. Howerver, LiDAR point clouds are \textit{sparse, irregular and have highly variable poin density}. We can adress these challenges by \textit{manually crafting feature repr} for point clouds, \textit{point cloud projection into perspective view} for image-based techniques, or \textit{rasterize point clouds into 3D voxel grids} and encode each voxel with hand-crafted or PointNet features.
+\textbf{LiDAR} provides reliable depth information used to localize and characterize objects. However, LiDAR point clouds are \textit{sparse, irregular and have highly variable point density}. We can adress these challenges by \textit{manually crafting feature repr} for point clouds, \textit{point cloud projection into perspective view} for image-based techniques, or \textit{rasterize point clouds into 3D voxel grids} and encode each voxel with hand-crafted or PointNet features.
 
 \paragraph{VoxelNet}
-While a pure 2D inspried sliding window and classification approach is theoretically possible, the seach space is huge (cubic increase with resolution).\\
+While a pure 2D inspired sliding window and classification approach is theoretically possible, the search space is huge (cubic increase with resolution).\\
 
 $\rightarrow$ two-stage approach \textbf{object proposal + refinement}
 \vspace{-0.3cm}
@@ -1167,9 +1174,408 @@ $$L = \alpha\, \tfrac{1}{N_{\text{pos}}}\sum_i L_{\text{cls}}(p_i^{\text{pos}}, 
 
 
 \subsection{3D Reconstruction and Localization}
+\begin{definition}[Localization in CV.]
+    CV is the inverse algorithmic process of inferring properties of the world and of optical sensors based on visual sensory observations. The localization them estimates the 3D Euclidean motion as a composite of translation $t$ and rotation $R$.
+\end{definition}
+
+
+\paragraph{Transformation conventions.} The forward (world/frame 1 $\to$ sensor/frame 2) and inverse maps are
+\begin{equation*}
+    \mathbf{P}_s = [\mathbf{R}\mid\mathbf{t}]\,\tilde{\mathbf{P}}_w \;\Leftrightarrow\; \mathbf{P}_s = \mathbf{R}\mathbf{P}_w + \mathbf{t} \;\Leftrightarrow\; \mathbf{P}_w = \mathbf{R}^T(\mathbf{P}_s - \mathbf{t}) \;\Leftrightarrow\; \mathbf{P}_w = \mathbf{R}^T\mathbf{P}_s - \mathbf{R}^T\mathbf{t}.
+\end{equation*}
+The translation vector is always \textit{the origin of the input frame expressed in coordinates of the output frame}. Hence: $\mathbf{R}, \mathbf{t}$ map world$\to$sensor; the inverse uses $\mathbf{R}^T$ (since $\mathbf{R}$ orthogonal $\Rightarrow \mathbf{R}^{-1}=\mathbf{R}^T$) and translation $-\mathbf{R}^T\mathbf{t} = \mathbf{C}$, the \textit{sensor origin (camera center) in world coordinates}.
+
+
+\subsubsection{Motion Estimation from 3D and ICP Algorithm}
+Motion estimation from \textbf{3D point clouds} aims to find the 3D motion $R,t$ of the sensor that best aligns two point clouds $\mathcal{P}_S, \mathcal{P}_{S'}$ obtained from the same static object (we get the movement relative to this point, ICP sensitive to such outliers --- use robust Loss rather than default squared Euclidean norm).\\
+Since we do not know the point correspondences we must apply some approximation. 
+
+\paragraph{Iterative Closest Point (ICP).}
+ICP solves the correspondence problem as an optimization. Given two sets of 3D points $\mathcal{P}_s = [\mathbf{P}_s^{(1)}\;\mathbf{P}_s^{(2)}\;\dots\;\mathbf{P}_s^{(n)}]$ and $\mathcal{P}_{s'} = [\mathbf{P}_{s'}^{(1)}\;\mathbf{P}_{s'}^{(2)}\;\dots\;\mathbf{P}_{s'}^{(n)}]$, find the 3D Euclidean motion $\{\hat{\mathbf{R}}, \hat{\mathbf{t}}\}$ and the assignment function $\hat\phi: \{1,\dots,n\}\to\{1,\dots,n\}$ that minimize the sum of squared errors:
+$$
+\{\hat{\mathbf{R}}, \hat{\mathbf{t}}, \hat\phi\} = \arg\min_{\mathbf{R},\mathbf{t},\phi} E(\mathbf{R},\mathbf{t},\phi), \qquad E(\mathbf{R},\mathbf{t},\phi) = \sum_{i=1}^{n} \left\| \mathbf{R}\mathbf{P}_s^{(\phi(i))} + \mathbf{t} - \mathbf{P}_{s'}^{(i)} \right\|_2^2,
+$$
+where $\mathbf{P}_s^{(\phi(i))}$ and $\mathbf{P}_{s'}^{(i)}$ are the corresponding points induced by the assignment function $\phi$. The two clouds need \textit{not} be equal-sized: $\phi$ is a nearest-neighbour (many-to-one) map, not a bijection, so $n_s \neq n_{s'}$ is fine.
+
+\begin{itemize}
+    \item \textbf{Key idea}: if the correct correspondences $\phi$ are \textit{known}, the optimal $\{\hat{\mathbf{R}}, \hat{\mathbf{t}}\}$ has a \textbf{closed-form} solution.
+    \item \textbf{Intuition}: at the optimal motion, corresponding points are closer to each other than to any other point.
+    \item \textbf{Heuristic / caveat}: $\phi$ matches each point to its \textit{currently} closest point $\Rightarrow$ a \textbf{good initialization} is required (converges to local minimum only).
+\end{itemize}
+\textbf{Procedure} (alternate assignment $\leftrightarrow$ motion until convergence):
+\begin{enumerate}
+    \item Initial guess $\{\check{\mathbf{R}}, \check{\mathbf{t}}\}$ (usually $I$ and $0$).
+    \item \textit{Assignment}: associate each point in $\mathcal{P}_{s'}$ with the closest point in $\mathcal{P}_s$ (defines $\phi$; need not be bijective $\Rightarrow$ no perfect matching of $\mathcal{P}_{s'}$ \& $\mathcal{P}_s$ required - duplicate assignments in $\mathcal{P}_s$ possible).
+    \item \textit{Motion}: solve the closed-form optimal $\{\hat{\mathbf{R}}, \hat{\mathbf{t}}\}$ for the fixed $\phi$.
+    \item Repeat until convergence.
+\end{enumerate}
+
+\paragraph{Optimal Motion.}
+Step (3) of finding the optimal motion $\{\hat{\mathbf{R}}, \hat{\mathbf{t}}\}$ given $\phi$ from Step (2) solved using \textbf{Least Squares Linear Regression}.\\
+
+\textbf{Caveat (}$\mathbf{R}\notin$\textbf{ vector space):} translation $\mathbf{t}$ is plain least squares, but $\mathbf{R}\in SO(3)$ (special orthogonal group) has $9$ params with only $3$ DOF (entries interdependent) $\Rightarrow$ not amenable to default least squares. Strategy: \textit{eliminate} $\mathbf{t}$ symbolically, reduce to a rotation-only problem, solve by SVD.\\
+
+\textbf{1. Optimal translation given rotation.} Fix $\hat{\mathbf{R}}$. Each pair can be aligned exactly ($\hat{\mathbf{R}}\mathbf{P}_s^{(\phi(i))} + \mathbf{t} - \mathbf{P}_{s'}^{(i)} = 0$); stacking all $n$ gives an overdetermined $3n\times 3$ system $\mathbf{A}\mathbf{t}=\mathbf{b}$ with $\mathbf{A}=[\mathbb{I}_3;\dots;\mathbb{I}_3]$, $\mathbf{b}^{(i)}=\mathbf{P}_{s'}^{(i)}-\hat{\mathbf{R}}\mathbf{P}_s^{(\phi(i))}$. Normal equations $\mathbf{t}=(\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T\mathbf{b}$ with $\mathbf{A}^T\mathbf{A}=n\mathbb{I}_3$ yield (a formula in $\mathbf{R}$, not yet a number):
+$$
+\hat{\mathbf{t}} = \boldsymbol{\mu}_{s'} - \hat{\mathbf{R}}\,\boldsymbol{\mu}_{s,\phi}.
+$$
+\textit{Intuition}: the centroids of the two \textit{matched} sets are aligned by $\{\hat{\mathbf{R}},\hat{\mathbf{t}}\}$. Note $\boldsymbol{\mu}_{s,\phi}\neq\boldsymbol{\mu}_s$ in general (only $\phi$-selected points contribute, $\phi$ not bijective).
+
+\textbf{2. Optimal rotation.} Substitute $\hat{\mathbf{t}}(\mathbf{R})$ back into $E$ $\Rightarrow$ $\mathbf{t}$ cancels, objective is centered and depends on $\mathbf{R}$ only. Minimizing it $\Leftrightarrow$ maximizing
+$$
+\max_{\mathbf{R}}\sum_{i=1}^{n}\big(\mathbf{P}_s^{(\phi(i))}-\boldsymbol{\mu}_{s,\phi}\big)^T\mathbf{R}^T\big(\mathbf{P}_{s'}^{(i)}-\boldsymbol{\mu}_{s'}\big).
+$$
+Writing $\mathbf{R}^T=\mathbf{U}\mathbf{V}^T$ (composition of two independent rotations) reduces this to $\max_{\mathbf{U},\mathbf{V}}\operatorname{trace}(\mathbf{U}^T\mathbf{W}\mathbf{V})$, where
+$$
+\mathbf{W}=\sum_{i=1}^{n}\big(\mathbf{P}_s^{(\phi(i))}-\boldsymbol{\mu}_{s,\phi}\big)\big(\mathbf{P}_{s'}^{(i)}-\boldsymbol{\mu}_{s'}\big)^T
+$$
+is the \textbf{cross-covariance} of the two centered point sets.
+
+\textbf{3. Solve via SVD.} The trace-maximization is solved exactly by the SVD $\mathbf{W}=\hat{\mathbf{U}}\boldsymbol{\Sigma}\hat{\mathbf{V}}^T$. To stay in $SO(3)$ (reject reflections $\to$ non-right-handed frames, which lie in $O(3)\setminus SO(3)$), correct with the determinants:
+$$
+\hat{\mathbf{R}} = \hat{\mathbf{V}}\,\operatorname{diag}\!\big(1,\,1,\,\det(\hat{\mathbf{U}})\det(\hat{\mathbf{V}})\big)\,\hat{\mathbf{U}}^T.
+$$
+\textit{Intuition}: align the principal directions of variation (modeled by the cross-covariance) of the two corresponding sets.
+
+\textbf{Order note}: the derivation eliminates $\mathbf{t}$ first to expose the rotation-only objective; at \textit{runtime} compute $\hat{\mathbf{R}}$ (SVD) first, then $\hat{\mathbf{t}}=\boldsymbol{\mu}_{s'}-\hat{\mathbf{R}}\boldsymbol{\mu}_{s,\phi}$.
+
+\subsubsection{Motion Estimation from 2D and VO}
+We no longer leverage 3D Point Clouds to estimate motion but rather 2D images from various viewpoints. 
+
+\begin{definition}[Visual Odometry.]
+    Assuming a single monocular system with images taken at time $k: I_{0:n}=\{I_0,\dots,I_n\}$, then two sequential images at $k-1$ and $k$ are relate by the rigid body transformation:
+    $$
+    T_k = 
+    \begin{bmatrix}
+        R_{k,k-1} & t_{k,k-1}\\
+        0 & 1
+    \end{bmatrix}
+    $$
+    Trough the concatenation of all transformations $T_{0:n}$ we can recover the full trajectory at each camera position $C_1, \dots ,C_n$ relative to the initial coordinate frame $C_0$ (pose by pose/ 2D to 2D).
+\end{definition}
+
+This works well given \textbf{sufficient illumination}, a \textbf{dominance of static} over dynamic scene constituents, \textbf{adequate texture} for informative feature extraction, and \textbf{sufficient co-visibility} between at least consecutive frame pairs.
+
+
+\subsubsection{Epipolar Geometry, Two-frame SFM, and the 8-Point Algorithm}
+\paragraph{Epipolar Geometry and Constraint}
+For a point $p$ in $k-1$ the matching point in $k$ must lie on the \textit{epipolar line} $l'$ in the second image (\textbf{Epipolar Constraint}), where 
+\begin{itemize}
+    \item \textbf{epipolar line} $l'$: projection of the back-projected ray $\pi^{-1}(p) = \lambda K^{-1}p$ onto the camera image
+    \item \textbf{epipole}: the projection of the optical center on the camera image; i.e., where the epipolar lines intersect (can be outside the image).
+    \item \textbf{epipolar plane} is given by the hyperplane via the camera centers $C_r,C_l$ and the image point
+\end{itemize}
+\vspace{-10px}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{img/EpipolarConstraint.png}
+    \caption{The Epipolar Constraint of Converging Cameras}
+    \label{fig:epipolarConstraint}
+\end{figure}
+
+\begin{itemize}
+    \item Converging cameras: As the position of the 3D point changes the epipolar lines rotate around the baseline
+    \item Identical and horizontally-aligned cameras (Simplified Case): $e$'s are at infinity, since the epipolar lines are essentially parallel - so the cameras never see each other no matter the size of $b$.
+    \item Sequential images in forward motion: Epipolar with constant coordinates in both images (imaging the epipolar lines intersecting in the middle of the image at a focus point). The points move along these lines.
+\end{itemize}
+
+
+\paragraph{Essential Matrix} 
+Given two normalized (homogeneous) image points
+$\bar{\mathbf p}_1,\bar{\mathbf p}_2$ and the relative pose $(R,\mathbf T)$, we derive the essential matrix ($3\times 3$; 5DOF: 3 by $R$, 2 by $t$ - translation up to scale only) from coplanarity of $\bar{\mathbf p}_2$, $\bar{\mathbf p}'_1$, and $\mathbf T$:
+\[
+\begin{aligned}
+\bar{\mathbf p}'_1 &= R\,\bar{\mathbf p}_1,\\
+\mathbf n &= \mathbf T \times \bar{\mathbf p}'_1 \qquad \text{(normal of the epipolar plane)},\\
+\bar{\mathbf p}_2^\top \mathbf n &= 0\\
+\Rightarrow\ \bar{\mathbf p}_2^\top\big(\mathbf T \times (R\bar{\mathbf p}_1)\big) &= 0\\
+\Rightarrow\ \bar{\mathbf p}_2^\top[\mathbf T]_\times R\,\bar{\mathbf p}_1 &= 0\\
+\Rightarrow\ \bar{\mathbf p}_2^\top E\,\bar{\mathbf p}_1 &= 0,
+\qquad
+E = [\mathbf T]_\times R .
+\end{aligned}
+\]
+\noindent\textit{Intuition:} $[\mathbf T]_\times$ turns “cross with $\mathbf T$” into a matrix, so $E$
+packages translation (up to scale) and rotation into one bilinear constraint that corresponding
+\emph{normalized} points must satisfy.
+
+\paragraph{8-Point Algorithm for the Essential Matrix.} Since each pair of \textit{normalized} ($\mathbf{\tilde{p}}_1^{(i)}=\mathbf{K}^{-1}\mathbf{p}_1^{(i)}$ and zero-centered with std $\sqrt{2} \rightarrow  \mathbf{\bar{p}}_1^{(i)}$) point correspondences provides a linear equation through the Epipolar constraint $\bar{\mathbf p}_2^\top E\,\bar{\mathbf p}_1 = 0$. Normalization is required since we have elementwise multiplication over columns that have different scales in orders of magnitude, that would lead to numerical instability:
+$$
+\bar{u}_2 \bar{u}_1 e_{11}+\bar{u}_2 \bar{v}_1 e_{12}+\bar{u}_2 e_{13}+\bar{v}_2 \bar{u}_1 e_{21}+\bar{v}_2 \bar{v}_1 e_{22}+\bar{v}_2 e_{23}+\bar{u}_1 e_{31}+\bar{v}_1 e_{32}+e_{33}=0
+$$
+
+We can stack these equations for $n$ correspondences into a single homogeneous linear system
+\[
+Q\,\bar{\mathbf E} = \mathbf 0,
+\qquad
+\bar{\mathbf E}=\mathrm{vec}(E)=
+\begin{bmatrix}
+e_{11}&e_{12}&e_{13}&e_{21}&e_{22}&e_{23}&e_{31}&e_{32}&e_{33}
+\end{bmatrix}^{\!\top},
+\]
+where each row of $Q\in\mathbb{R}^{n\times 9}$ is built from one correspondence
+$(\bar u_1,\bar v_1)\leftrightarrow(\bar u_2,\bar v_2)$:
+\[
+Q_i=
+\begin{bmatrix}
+\bar u_2\bar u_1 & \bar u_2\bar v_1 & \bar u_2 &
+\bar v_2\bar u_1 & \bar v_2\bar v_1 & \bar v_2 &
+\bar u_1 & \bar v_1 & 1
+\end{bmatrix}.
+\]
+
+\textbf{Minimal case ($n=8$).}
+Each correspondence contributes one independent linear constraint, so $8$ points are sufficient to determine
+$\bar{\mathbf E}$ up to scale (in practice $Q$ should have rank $8$ so that $\mathrm{null}(Q)$ is 1D).\\
+
+\textbf{Over-determined case ($n>8$).}
+Solve in least-squares form
+\[
+\min_{\|\bar{\mathbf E}\|=1}\ \|Q\bar{\mathbf E}\|^2,
+\]
+whose solution is the right singular vector of $Q$ associated with the smallest singular value
+(equivalently, the eigenvector of $Q^\top Q$ with smallest eigenvalue). Reshape $\bar{\mathbf E}$ into
+$E\in\mathbb{R}^{3\times 3}$.\\
+
+\textbf{Enforcing the essential-matrix structure (rank-2 constraint).}
+Because $E=[\mathbf T]_\times R$, a true essential matrix has \emph{two equal non-zero singular values and one zero} (so $\mathrm{rank}(E)=2$, $5$ DOF). The linear estimate $\hat E$ from noisy data generally violates this, so we project it onto the closest valid essential matrix with a \textit{second} (now only $3\times3$) SVD, averaging the two largest singular values and forcing the smallest to zero:
+\[
+\hat E = U_E\,\Sigma_E\,V_E^\top
+\quad\longrightarrow\quad
+E^\ast = U_E\,
+\mathrm{diag}\!\Big(\tfrac{\sigma_E^{(1)}+\sigma_E^{(2)}}{2},\ \tfrac{\sigma_E^{(1)}+\sigma_E^{(2)}}{2},\ 0\Big)\,
+V_E^\top .
+\]
+
+\textbf{Undoing the normalizations.}
+Finally reverse the pre-processing in the opposite order: since $\bar{\mathbf p}=N\,\tilde{\mathbf p}$ turns the constraint into $\tilde{\mathbf p}_2^\top(N_2^\top E^\ast N_1)\tilde{\mathbf p}_1=0$, apply the inverse linear transforms of the std-$\sqrt2$ conditioning (step~2) to map $E^\ast$ back to the original normalized-image coordinates.\\
+
+\textbf{Degenerate configurations.}
+The linear 8-point estimation becomes ill-conditioned/degenerate when the underlying 3D points are (nearly)
+coplanar; in such cases alternative minimal solvers (e.g.\ 5-point methods) are preferred.
+
+\paragraph{Recovering $(R,\mathbf T)$ — the 4 Solutions.} A final $3\times3$ SVD $E^\ast=U_E\,\Sigma_{E^\ast}V_E^\top$ decomposes the essential matrix into motion. Because the sign of the translation and the direction of rotation interfere, this yields \textbf{four} candidate motions, built from the third column $\mathbf u_3$ of $U_E$ and the fixed orthogonal matrix
+\vspace{-0.3cm}
+\[
+W=\begin{bmatrix}0&-1&0\\ 1&0&0\\ 0&0&1\end{bmatrix}:
+\quad
+\mathbf T=\pm\mathbf u_3,
+\qquad
+R=U_E W V_E^\top \ \text{ or }\ U_E W^\top V_E^\top .
+\]
+Any candidate $R$ with $\det R=-1$ is negated to make it a proper rotation ($\det R=+1$). The single physically valid motion is selected by \textbf{triangulating} the correspondences and keeping the solution for which the reconstructed 3D points lie \emph{in front of both cameras} ($z>0$, the cheirality check). This \textbf{gives us $\mathbf T$ up to scale}.
+
+\paragraph{2D-to-2D VO Pipeline.} One iteration of the monocular VO loop: (1) capture $I_k$; (2) match features $I_{k-1}\!\leftrightarrow\! I_k$; (3) estimate $E$ (8-point); (4) decompose into $R_k,\mathbf t_k$, form $T_k$; (5) compute relative scale and rescale $\mathbf t_k$; (6) concatenate the global pose $C_k = C_{k-1}T_k$; repeat.
+
+\paragraph{Relative Scale.} The absolute scale is unrecoverable from images, but the \textit{relative} scale between consecutive transforms is enough for a consistent trajectory. Triangulate the same points from two subsequent pairs ($X_{k-1},X_k$); the scale is the distance ratio over co-observed points $i,j$ (averaged/RANSAC'd in practice):
+\[
+r = \frac{\lVert X_{k-1,i}-X_{k-1,j}\rVert}{\lVert X_{k,i}-X_{k,j}\rVert}.
+\]
+\vspace{-0.8cm}
+\subsubsection{RANSAC}
+Sensor noise, image blur, algorithmic noise (like greedy algos) etc, we must do outlier rejection via \textit{robost estimation}. \textbf{RANSAC} is the standard approach for fitting a model in the presence of many outliers (e.g. $E$).
+
+\begin{itemize}
+    \item \textbf{Model in SfM:} $E$ (calibrated) (or $F$ if uncalibrated); equivalently $(R,T)$ once calibrated.
+    \item \textbf{Minimal sample size:} depends on the solver (e.g. $m{=}8$ for the classic 8-point $E$).
+    \item \textbf{Distance to the model:} choose a residual $r_i(\theta)$, e.g.\ some geometric or (symmetric) epipolar line distance
+\end{itemize}
+
+\begin{itemize}
+    \item \textbf{Idea:} fit many hypotheses from random minimal samples and keep the one with the largest inlier set.
+    \item \textbf{Loop:} sample $m$ points $\rightarrow$ fit $\theta$ $\rightarrow$ compute residuals $\rightarrow$ inliers if $r_i(\theta)<\tau$.
+    \item \textbf{Output:} best hypothesis + \textbf{refit} using all inliers (least squares).
+    \item \textbf{Notes:} non-deterministic; robust to bad initialization; quality depends on $\tau$, $m$, and $k$.
+\end{itemize}
+
+\paragraph{Required Iterations.} For inlier fraction $w$, sample size $m$, and success probability $p$, the iterations $k=\frac{\log(1-p)}{\log(1-w^m)}$ grow fast with the outlier rate and $m$ (e.g.\ $w=50\%,p=99\%$: $m=8\!\to\!k\approx1177$ vs.\ $m=2\!\to\!k\approx16$). Hence smaller minimal samples via motion/scene constraints (planar $\to$ 2-point, vehicle $\to$ 1-point) drastically cut cost.
+
+\subsubsection{Learned Feature Mapping and SuperGlue}
+\textbf{Approaches:}
+\begin{itemize}
+    \item \textbf{Nearest-neighbor matching:} compare individual descriptors and link closest pairs — greedy, locally optimal, ignores assignment structure.
+    \item \textbf{Learned matching (SuperGlue):} cast both objectives as one \textit{differentiable global optimization} over all features in both frames, solved end-to-end rather than per-keypoint.
+\end{itemize}
+
+\paragraph{SuperGlue: Differentiable Optimal Matching.} Since each keypoint matches at most one (or none), the matching is a \textbf{partial assignment} between the keypoint sets $\mathcal A=\{1,\dots,M\}$ and $\mathcal B=\{1,\dots,N\}$. SuperGlue makes this \textit{soft and differentiable}: every possible pair $(i,j)$ gets a \textbf{confidence} $p_{ij}\in[0,1]$ computed from the descriptors $\mathbf f_i^{(1)},\mathbf f_j^{(2)}$ ($p_{ij}=1$ = certain match). The partial-assignment property is enforced by the constraints
+\[
+\sum_{j=1}^{N} p_{ij}\le 1\ \ \forall i\in\mathcal A,
+\qquad
+\sum_{i=1}^{M} p_{ij}\le 1\ \ \forall j\in\mathcal B,
+\]
+i.e.\ each keypoint distributes at most unit confidence (the slack $<1$ absorbs unmatched keypoints).
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img/SuperGlueDifferentiableOptimalmatching.png}
+    \caption{SuperGlue Differentiable Optimal Matching}
+    \label{fig:SuperGlueDifferentiableOptimalmatching}
+\end{figure}
+\textbf{Pipeline} (Fig.~\ref{fig:SuperGlueDifferentiableOptimalmatching}):
+
+\begin{enumerate}
+    \item \textbf{Score matrix.} $\mathbf S_{i,j}=\mathbf f_i^{(1)}\!\cdot\mathbf f_j^{(2)}$ ($M\times N$): dot-product similarity, more similar descriptors $\Rightarrow$ larger score. $\rightarrow$ raw, unnormalized affinities, not yet valid confidences.
+    \item \textbf{Dustbin augmentation.} Append one row \& column with a \textit{learnable shared} score $z$, giving $\bar{\mathbf S}$ of size $(M{+}1)\times(N{+}1)$. The dustbin soaks up unmatched keypoints, turning the $\le 1$ constraints into equalities (each row/column, dustbin included, sums to 1 $\Rightarrow$ normalization). $\rightarrow$ a ``trash can'' that lets a row-sum still reach 1 when a keypoint has no real partner; this is what allows non-matching.
+    \item \textbf{Sinkhorn.} Exponentiate $\bar{\mathbf S}$, then iterate alternating row- and column-normalization for $T$ steps. This converges to a doubly-stochastic soft assignment $\bar{\mathbf P}$ that satisfies the constraints differentiably. $\rightarrow$ fixing rows breaks columns and vice versa, so alternating converges to satisfy both; a soft, gradient-friendly stand-in for the hard Hungarian assignment.
+    \item \textbf{Output.} $\bar{\mathbf P}:(M{+}1)\times(N{+}1)$ partial assignment; drop the dustbin row/column to read off matches. $\rightarrow$ confidence left in the dustbin means ``no match''.
+    \item \textbf{Training.} Maximum-likelihood loss $L=-\sum_{(i,j)\in\mathcal M}\log \mathbf P_{ij}$ over GT (non-)matches $\mathcal M$, back-propagated into the learnable descriptors. $\rightarrow$ rewards high probability on true matches, shaping descriptors so correct pairs score highest.
+\end{enumerate}
+
+\textbf{Input: Attentional Context Aggregation} (how do we get the context-aware descriptors $\mathbf f_i^{(1)},\mathbf f_j^{(2)}$ fed to the optimal matching). Raw local descriptors (e.g.\ SIFT) are purely \textit{local}; matching needs descriptors \textbf{aware of the global context} (spatial layout in both frames). Achieved with attention, treating each keypoint as a \textbf{token}:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{img/SuperGlueFeatures.png}
+    \caption{SuperGlue Attentional Context Aggregation}
+    \label{fig:SuperGlueFeatures}
+\end{figure}
+\begin{enumerate}
+    \item \textbf{Keypoint Encoder.} MLP embeds position \& confidence $(x_i,y_i,c_i)$ and \textit{adds} it to the visual descriptor $\mathbf d_i$, giving the initial embedding $\mathbf x_i^{(0)}$. $\rightarrow$ fuses \textit{appearance + location} into one token.
+    \item \textbf{Alternating attention ($L$ layers).} Residual attention block $\mathbf X^{(l)}=\mathbf X^{(l-1)}+\mathrm{MLP}\big(\mathrm{softmax}(\mathbf Q^\top\mathbf K)\,\mathbf V\big)$, with $\mathbf Q,\mathbf K,\mathbf V$ learned projections of the embeddings:
+    \begin{itemize}
+        \item \textbf{Self-attention} (odd layers): $\mathbf K,\mathbf V$ from the \textit{same} image $\rightarrow$ attend to adjacent/salient/similar-looking keypoints (intra-frame layout).
+        \item \textbf{Cross-attention} (even layers): $\mathbf K,\mathbf V$ from the \textit{other} image $\rightarrow$ attend to keypoints near the actual match (inter-frame comparison).
+    \end{itemize}
+    $\rightarrow$ cascading both makes each keypoint aware how its neighbors and salient keypoints map to the other image.
+    \item \textbf{Final projection.} Linear layer $\mathbf f_i^{(1)}=\mathbf W\,\mathbf x_i^{(2L)}$ yields the context-aware descriptors fed to the matching stage.
+\end{enumerate}
+
+
+\subsubsection{Neural Radiance Fields (NeRF)}
+\textbf{Why:} Classical 3D reps each lose something: point clouds / meshes / voxels are \textbf{discrete} (info loss); multi-view images are only 2D projections; implicit functions need GT geometry. \textbf{NeRF:} store the scene as \textit{one continuous function} (the MLP weights), learned from \textit{posed images alone} (no GT geometry). $\rightarrow$ effectively infinite resolution from a few MB of weights; goal is \textbf{novel-view synthesis} (render the scene from unseen camera poses).\\
+
+\textbf{Core idea:} $F_\Theta:\ \underbrace{(x,y,z)}_{\text{position}}+\underbrace{(\theta,\phi)}_{\text{view dir.}}\ \mapsto\ \underbrace{\sigma}_{\text{density}}+\underbrace{(r,g,b)}_{\text{radiance}}$. Density $=$ \textit{view-independent geometry} (does a surface exist here?); radiance $=$ \textit{view-dependent color} (a glossy highlight shifts as you move, the surface does not, hence the split). Render via volume rendering $\rightarrow$ fully differentiable $\rightarrow$ train on a pixel reconstruction loss.
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{img/NeRF.png}
+    \caption{Neural Radiance Fields}
+    \label{fig:NeRF}
+\end{figure}
+
+\textbf{Architecture trick} (enforces view-independent $\sigma$): MLP$_1(\mathbf x)\to\sigma+\text{feature }\mathbf f$; then append $(\theta,\phi)$ to $\mathbf f$ $\to$ MLP$_2\to\mathbf c$. So geometry cannot change with viewpoint by construction; only color can. $\rightarrow$ prevents the net from ``cheating'' by faking geometry per view, which would break multi-view consistency.\\
+
+\textbf{Volume rendering} (how the MLP becomes a pixel): read $\sigma(\mathbf x)$ as the \textbf{probability density of ray termination} at $\mathbf x$ (likelihood a photon is absorbed/reflected there). A pixel is the expected radiance along its ray $\mathbf r(t)=\mathbf o+t\mathbf d$:
+\[
+\mathbf C(\mathbf r)=\int_{t_n}^{t_f} \underbrace{T(t)}_{\text{reach }t}\,\underbrace{\sigma}_{\text{stop here}}\,\mathbf c\,dt,
+\qquad
+T(t)=\exp\!\Big(-\!\int_{t_n}^{t}\sigma\,ds\Big)\ \text{(transmittance)}.
+\]
+\textbf{Intuition:} $T$ $=$ chance the ray survived this far; at a surface $\sigma$ spikes $\Rightarrow$ $T$ collapses $\Rightarrow$ the first opaque hit dominates the integral $\Rightarrow$ occlusion is handled for free, and empty space ($\sigma\!\approx\!0$) simply contributes nothing.\\
+
+\textbf{Discretize \& train:} $N$ stratified (jittered) samples per ray turn the integral into a weighted sum, segment opacity $\alpha_i=1-e^{-\sigma_i\delta_i}$:
+\[
+\hat{\mathbf C}(\mathbf r)=\sum_{i=1}^{N} T_i\,\alpha_i\,\mathbf c_i,
+\quad
+T_i=\textstyle\prod_{j<i}(1-\alpha_j),
+\quad
+\delta_i=t_{i+1}-t_i.
+\]
+This is just \textit{alpha compositing} of the samples front-to-back, and it is differentiable in $(\sigma_i,\mathbf c_i)$ $\Rightarrow$ the pixel loss back-props through rendering into $F_\Theta$ (no 3D supervision needed). \textit{Jittering} the samples avoids the net overfitting to fixed depths.\\
+
+\textbf{Positional encoding} (why detail isn't blurry): MLPs are \textit{spectrally biased} to low frequencies, so raw $xyz\theta\phi$ inputs $\Rightarrow$ smooth/blurry output. Map each coord through fixed sinusoids of exponentially growing frequency, $F_\Theta=F'_\Theta\circ\gamma$:
+\[
+\gamma(p)=\big(\sin(2^0\pi p),\cos(2^0\pi p),\dots,\sin(2^{L-1}\pi p),\cos(2^{L-1}\pi p)\big),
+\quad L{=}10\ (\mathbf x),\ L{=}4\ (\mathbf d).
+\]
+\textbf{Intuition:} nearby coords get very different encodings at high frequencies, handing the network a high-frequency basis (Fourier features) $\Rightarrow$ it can represent sharp edges \& fine texture instead of averaging them away.
+
+\paragraph{Limitations} Basic NeRF is \textbf{per-scene} (one trained network $=$ one scene, no generalization), covers only a \textbf{bounded volume}, and assumes a \textbf{static scene}: fixed illumination/medium density, no transient or dynamic objects. $\rightarrow$ exactly the assumptions a \textit{driving} scene violates (photos span hours/seasons, cars \& pedestrians move, cities are huge), motivating the two extensions below.
+
+\paragraph{Extensions for Automated Driving} The driving setting breaks NeRF's static + bounded assumptions, so two ideas adapt it:
+\begin{itemize}
+    \item \textbf{NeRF in the Wild} (handles \textit{appearance \& transient variation}): splits the scene into a \textbf{static} branch and a \textbf{transient} branch. Geometry (density) stays shared, but color is conditioned on a per-image \textbf{appearance embedding} (absorbs changing illumination/weather across photos) and a separate transient head with an \textbf{uncertainty} $\beta$ models dynamic objects so they don't corrupt the static reconstruction. $\rightarrow$ lets NeRF train on uncontrolled, time-varying captures instead of one clean static scene.
+    \item \textbf{Block-NeRF} (handles \textit{scale}): a single MLP can't fit a city, so the area is tiled into \textbf{many overlapping Block-NeRFs}, one per intersection. Dynamic objects are \textbf{masked out} (semantic segmentation) during training, and each network also predicts \textbf{visibility} (transmittance of a ray). At render time, neighboring blocks are \textbf{composited} by inverse-distance weighting (low-visibility blocks discarded) $\rightarrow$ smooth transitions and \textbf{city-scale}, reconstruction from real driving logs.
+\end{itemize}
+\textit{Takeaway:} together they remove the static-scene and bounded-volume limitations $\Rightarrow$ NeRF becomes usable for large, dynamic, real-world driving environments (simulation, mapping, scene reconstruction).
+
 
 \newpage
 \section{Part IV: Robust Perception: Multi-Modal, Multi-Domain and Multi-Agent Methods}
+\subsection{Domain Adaptation}
+\subsubsection{Motivation, Taxonomy, and Fundamentals}
+For SAE level 5 (full automation) we require \textit{unlimited} Operation Design Domain, by definition --- in normal and adverse conditions (generalization is often poor with domain shift).
+
+\paragraph{Domain Shift Formal Definition} A \textbf{domain} is the joint distribution $p(I,Y)$ of inputs $I$ and reference outputs $Y$. Source samples $(I_s,Y_s)\sim p_s$, target samples $(I_t,Y_t)\sim p_t$. \textbf{Domain shift:} in general $p_s\neq p_t$ for (unseen) target data $\rightarrow$ models trained on $p_s$ generalize poorly to $p_t$.\\
+
+\textbf{Domain Shifts} Categorized by what changes between source and target domain:
+\begin{itemize}
+    \item \textbf{Low-level} (appearance only like color, semantics unchanged): \textit{condition-level} shift (weather, day/night) and \textit{sensor} differences (camera model/optics).
+    \item \textbf{High-level} (semantics/structure): \textit{semantic} shift in object size, shape, or spatial configuration, e.g.\ by geographic location.
+    \item \textbf{Both:} \textit{synthetic vs.\ real} (rendering) combines a low-level (look) and high-level (layout) shift.
+\end{itemize}
+
+\paragraph{Why not just train on everything?} Naïve: add all ``outsider'' domains to labeled training set and large enough foundation model $\rightarrow$ basically impossible.
+\begin{itemize}
+    \item \textbf{Curse of dimensionality}: must cover \textit{all combinations} of shift factors (weather $\times$ sensor $\times$ location $\times\dots$).
+    \item \textbf{Open domain}: test data can still be unseen/rare/unpredicted domain $\rightarrow$ unlimited ODD must handle it.
+    \item \textbf{Annotation cost}: exhaustive labels for massive data are expensive, especially for dense tasks (segmentation).
+    \item \textbf{Acquisition}: collecting data for narrow domains is hard: geographies, adverse conditions, dangerous collection.
+\end{itemize}
+
+\paragraph{Task Variants} Distinguished by which assets are available and \textit{when} (here: semantic segmentation):
+\begin{itemize}
+    \item \textbf{Unsupervised DA (UDA):} labeled source + \textit{unlabeled} target, at train time.
+    \item \textbf{Weakly-supervised DA:} as UDA, but target has \textbf{correspondences} to source (e.g.\ same place day/night).
+    \item \textbf{Source-free / model adaptation:} only a \textit{pretrained source model} (no source data) + unlabeled target.
+    \item \textbf{Test-time / online DA:} pretrained model adapted on the fly to \textbf{unlabeled sequential test data}.
+    \item \textbf{Domain generalization:} (large) labeled source(s) only; target \textbf{unseen}, \textit{no} adaptation at test time.
+\end{itemize}
+
+\subsubsection{Input-Level Adaptation}
+Align the \textit{image distributions of the source and the target domain} --- for \textit{low-level} domain shifts (e.g. fog/no fog).
+
+\paragraph{Physics-based Domain Translation}
+Leverage known priors of the domain shift: no target needed, reliable, controllable, and interpretable; but hard or impossible: assumptions necessary.\\
+
+\textbf{Image-Based}: e.g fog/rain simulation via depth plane fitting and guided filters using (like NeRF) $\hat{t}(x)=e^{-\alpha l (x)}$ with attenuation coefficient $\alpha$ to control fog density.\\
+This allows us to then train with the labels from the source domain (if available), removing the need for real target-domain data (pseudo-labels). Or use a segmentation model on unlabled source data, and apply these results (pseudo ground truth) as labels to the syntetic target data.\\
+
+\textbf{Lidar-Based}: e.g.\ snowfall has particles, so no longer just attenuation (as in the clear-air lidar introduction) but also \textit{backscattering}. Idea: simulate small spheres in the medium as snowflakes, per lidar pulse (small opening angle, azimuth $\approx 0.1^\circ$). Each simulated particle $j$ intersects the beam with a distribution-driven diameter $D_j$, range $R_j$, and center; from these its \textbf{occlusion angle} $\theta_j$ follows, partitioning the beam as $\theta = \theta_0 + \sum^n_{j=1}\theta_j$ ($\theta_0$: un-occluded part reaching the target).
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{img/LidarSnowfall.png}
+    \caption{Pulsed Lidar in Snowfall}
+    \label{fig:LidarSnowfall}
+\end{figure}
+
+The \textit{target} response must also account for the snowflakes: since a flake is smaller than the pulse extent ($D_j\ll c\tau_H$), its impulse response is modeled as a Dirac delta. A flake's peak can exceed the real object's $\rightarrow$ snow-caused noisy (spurious) lidar points.\\
+
+\textbf{Snowfall --- target impulse response.} The linear system model and optical channel $H_C(R)=\frac{T^2(R)}{R^2}\xi(R)$ are \textit{unchanged} (same as clear weather); only the \textit{target} response $H_T$ changes. The beam (opening angle $\theta$) is partly occluded by $n$ flakes, each blocking a sub-angle $\theta_j$ at range $R_j$, so $\theta=\theta_0+\sum_{j=1}^n\theta_j$ ($\theta_0$: fraction still reaching the real target). With $D_j\ll c\tau_H$ each flake is a Dirac in range:
+\begin{equation*}
+H_T(R)=\frac{1}{\theta}\Big(\underbrace{\rho_0\,\theta_0\,\delta(R-R_0)}_{\text{real target}}+\rho_s\sum_{j=1}^n\underbrace{\theta_j\,\delta(R-R_j)}_{\text{flake }j}\Big)=H_T^0(R)+\sum_{j=1}^n H_T^j(R),
+\end{equation*}
+i.e.\ a superposition weighted by each return's occlusion fraction $\theta_j/\theta$ and reflectivity ($\rho_s$ snow, $\rho_0$ target).\\
+
+\textbf{Snowfall --- received waveform.} By linearity of the convolution the received power is the same superposition,
+\begin{equation*}
+P_{R,\text{snow}}(R)=P_{R,\text{snow}}^0(R)+\sum_{j=1}^n P_{R,\text{snow}}^j(R),
+\end{equation*}
+and substituting $H_T^j$ into the linear system model shifts/scales the emitted $\sin^2$ pulse to range $R_j$:
+\begin{equation*}
+\begin{aligned}
+P_{R,\text{snow}}^j(R)&=\frac{C_A P_0\,\rho_s\,\theta_j\,\xi(R_j)}{\theta\,R_j^2}\int_0^{2\tau_H}\!\sin^2\!\Big(\tfrac{\pi}{2\tau_H}t\Big)\delta\!\Big(R-\tfrac{ct}{2}-R_j\Big)dt\\[1mm]
+&=\begin{cases}\dfrac{C_A P_0\,\rho_s\,\theta_j\,\xi(R_j)}{\theta\,R_j^2}\sin^2\!\Big(\dfrac{\pi(R-R_j)}{c\tau_H}\Big), & R_j\le R\le R_j+c\tau_H,\\[2mm] 0,&\text{otherwise.}\end{cases}
+\end{aligned}
+\end{equation*}
+and analogously $P_{R,\text{snow}}^0$ for the real target at $R_0$ (with $\rho_0,\theta_0$).\\
+
+\textbf{Intuition:} each flake reflects back the beam fraction $\theta_j/\theta$ it occludes $\rightarrow$ one $\sin^2$ peak per flake at its range $R_j$. Near flakes have small $R_j$, so the $1/R_j^2$ gain (plus high snow reflectivity $\rho_s$) can make a clutter peak \textit{exceed} the true target peak $\rightarrow$ spurious foreground points, while the target only receives the un-occluded fraction $\theta_0/\theta$ (weakened/lost return).
+
+\paragraph{Learned Domain Translation}
+
+\paragraph{Hand-crafted Domain Transformation}
+
+\subsubsection{Feature-Level Adaptation}
+Align the \textit{feature distributions of the source and the target domain} --- impose constraints/restict feature maps.
+
+\subsubsection{Output-Level Adaptation}
+Align the \textit{outputs for the source and the target domain} --- e.g. align entropies of the per pixel segmentation.
+
+\subsubsection{Test-Time Domain Adaptation}
+
+
 
 \newpage
 \section{Part V: Temporal Perception}
