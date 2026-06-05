@@ -1523,14 +1523,19 @@ For SAE level 5 (full automation) we require \textit{unlimited} Operation Design
     \item \textbf{Domain generalization:} (large) labeled source(s) only; target \textbf{unseen}, \textit{no} adaptation at test time.
 \end{itemize}
 
+\paragraph{Levels of Adaptation} \textit{Orthogonally} to the task variants above, alignment can be enforced at different \textbf{levels} of the network --- which is how the methods below are organized: \textbf{input} (align image distributions) $\rightarrow$ \textbf{feature} (align feature maps) $\rightarrow$ \textbf{output} (align predictions) $\rightarrow$ \textbf{test-time} (adapt online during inference).
+
 \subsubsection{Input-Level Adaptation}
 Align the \textit{image distributions of the source and the target domain}: for \textit{low-level} domain shifts (e.g. fog/no fog).
 
 \paragraph{Physics-based Domain Translation}
 Leverage known priors of the domain shift: no target needed, reliable, controllable, and interpretable; but hard or impossible: assumptions necessary.\\
 
-\textbf{Image-Based}: e.g fog/rain simulation via depth plane fitting and guided filters using (like NeRF) $\hat{t}(x)=e^{-\alpha l (x)}$ with attenuation coefficient $\alpha$ to control fog density.\\
-This allows us to then train with the labels from the source domain (if available), removing the need for real target-domain data (pseudo-labels). Or use a segmentation model on unlabled source data, and apply these results (pseudo ground truth) as labels to the syntetic target data.\\
+\textbf{Image-Based}: e.g.\ fog/rain simulation via depth plane fitting and guided filters using (like NeRF) $\hat{t}(x)=e^{-\alpha l (x)}$ with attenuation coefficient $\alpha$ to control fog density. Labels transfer for free:
+\begin{itemize}
+    \item If source is \textit{labeled}: synthesize the target style and \textbf{keep the source labels} (no real target data needed).
+    \item If source is \textit{unlabeled}: run a segmentation model on it and use those predictions as \textbf{pseudo ground truth} for the synthesized target images.
+\end{itemize}
 
 \textbf{Lidar-Based}: e.g.\ snowfall has particles, so no longer just attenuation (as in the clear-air lidar introduction) but also \textit{backscattering}. Idea: simulate small spheres in the medium as snowflakes, per lidar pulse (small opening angle, azimuth $\approx 0.1^\circ$). Each simulated particle $j$ intersects the beam with a distribution-driven diameter $D_j$, range $R_j$, and center; from these its \textbf{occlusion angle} $\theta_j$ follows, partitioning the beam as $\theta = \theta_0 + \sum^n_{j=1}\theta_j$ ($\theta_0$: un-occluded part reaching the target).
 \begin{figure}[H]
@@ -1564,9 +1569,9 @@ and analogously $P_{R,\text{snow}}^0$ for the real target at $R_0$ (with $\rho_0
 \textbf{Intuition:} each flake reflects back the beam fraction $\theta_j/\theta$ it occludes $\rightarrow$ one $\sin^2$ peak per flake at its range $R_j$. Near flakes have small $R_j$, so the $1/R_j^2$ gain (plus high snow reflectivity $\rho_s$) can make a clutter peak \textit{exceed} the true target peak $\rightarrow$ spurious foreground points, while the target only receives the un-occluded fraction $\theta_0/\theta$ (weakened/lost return).
 
 \paragraph{Learned Domain Translation}
-Data-driven domain translation: requires target data, can learn complex shifts but unrealiable, not very controllable nor interpretable. I.e., use a NN (image translator) to translate the source image into data representing the target domain.
+Data-driven domain translation: requires target data, can learn complex shifts but unreliable, not very controllable nor interpretable. I.e., use a NN (image translator) to translate the source image into data representing the target domain.
 
-\subparagraph{Paired Data / Supervised.} Works primarily when we have \textit{paired data}. Often misaligned pairs in reality (e.g. we can have driving data from the same location at different day times, yet the camera is not eactly the same, and dynamic objects have are different).
+\subparagraph{Paired Data / Supervised.} Works primarily when we have \textit{paired data}. Often misaligned pairs in reality (e.g. we can have driving data from the same location at different day times, yet the camera is not exactly the same, and dynamic objects are different).
 
 \subparagraph{Unpaired Data / Unsupervised.} Only two \textit{unaligned} sets $X_1$ (e.g.\ day), $X_2$ (e.g.\ night) --- \textit{no} correspondence $x_i\leftrightarrow y_i$. Realistic for driving (can't capture the exact same scene at two times of day).\\
 
@@ -1581,7 +1586,15 @@ Data-driven domain translation: requires target data, can learn complex shifts b
 \paragraph{Hand-crafted Domain Transformation}
 Transform in a fixed, \textit{non-learned} space (e.g.\ frequency): needs a target reference image; \textbf{controllable + interpretable}, but limited to the attributes of that one image and not always reliable.
 
-\subparagraph{Fourier Domain Adaptation (FDA).} \textbf{Observation:} high-level object attributes (shape of cars, humans) barely change across domains (low-frequency shift). \textbf{Hypothesis:} aligning only the \textit{low-level statistics} of source to target is a good UDA baseline: FDA does this at the \textbf{spectral level/ frequency decomposition}, non-learned.\\
+\subparagraph{Fourier Domain Adaptation (FDA).} \textbf{Observation:} high-level object attributes (shape of cars, humans) barely change across domains (low-frequency shift). \textbf{Hypothesis:} aligning only the \textit{low-level statistics} of source to target is a good UDA baseline: FDA does this at the \textbf{spectral level/ frequency decomposition}, non-learned.
+
+\vspace{-0.3cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{img/FDA.png}
+    \caption{Fourier Domain Adaptation}
+    \label{fig:FDA}
+\end{figure}
 
 \textbf{Method.} Split the DFT into amplitude and phase, $\mathcal{F}(I)=\mathcal{F}^A(I)\,e^{j\mathcal{F}^P(I)}$. Low-level statistics live in the \textit{low-frequency amplitude} (near the center in fourier/ zero frequency), so \textbf{swap the source's low-freq amplitude for the target's}, keep the source \textit{phase} (= content). With low-pass mask $M_\beta(h,w)=\mathbf{1}_{(h,w)\in[-\beta H:\beta H,\,-\beta W:\beta W]}$ (replace the low-level frequencies):
 \begin{equation*}
@@ -1592,12 +1605,121 @@ I_{s\to t}=\mathcal{F}^{-1}\!\Big(\big[\,M_\beta\,\mathcal{F}^A(I_t)+(1-M_\beta)
 \subsubsection{Feature-Level Adaptation}
 Align the \textit{feature distributions of the source and the target domain}: impose constraints/restict feature maps.
 
+\paragraph{CyCADA (Cycle-Consistent Adversarial Domain Adaptation).}
+Combines \textit{input-level} (CycleGAN-style image translation) \textbf{and} \textit{feature-level} alignment, while preserving semantics.
+
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{img/CyCADA.png}
+    \caption{Cycle-Consistent Adversarial Domain Adaptation}
+    \label{fig:CyCADA}
+\end{figure}
+\vspace{-0.4cm}
+
+\textbf{Input-level adaptation.} Translate source $\to$ target style so a translated image is \textit{indistinguishable} from a real target image (adversarial), with cycle-consistency: ($\mathcal{L}_{\text{GAN}}$ minimized by generator, maximized by discriminator.)
+
+\begin{align*}
+\mathcal{L}_{\text{GAN}} &= \mathbb{E}_{I_t}[\log D_T(I_t)] + \mathbb{E}_{I_s}[\log(1-D_T(G_{S\to T}(I_s)))]\\
+\mathcal{L}_{\text{cyc}} &= \mathbb{E}_{I_s}\!\big[\lVert G_{T\to S}(G_{S\to T}(I_s))-I_s\rVert_1\big] \;(+\text{ target dir.})
+\end{align*}
+
+\textbf{Semantic consistency.} The source model must give the \textit{same predictions} on the translated image as on the original $\rightarrow$ \textbf{car stays car, road stays road} (translation can't destroy labels).\\
+
+\textbf{Feature-level adaptation.} A second adversarial game on \textit{features}: $D_{\text{feat}}$ can't tell a translated image's representation $f_T(G_{S\to T}(I_s))$ from a real target one $f_T(I_t)$.
+\begin{equation*}
+\mathcal{L}_{\text{GAN,feat}} = \mathbb{E}_{I_t}[\log D_{\text{feat}}(f_T(I_t))] + \mathbb{E}_{I_s}[\log(1-D_{\text{feat}}(f_T(G_{S\to T}(I_s))))]
+\end{equation*}
+\textit{Intuition:} alignment at \textit{both} pixel and feature level $\rightarrow$ what's left of the domain gap after recoloring is closed in feature space, semantic consistency stops the GAN from cheating by changing content.
+
 \subsubsection{Output-Level Adaptation}
-Align the \textit{outputs for the source and the target domain}: e.g. align entropies of the per pixel segmentation.
+Align the \textit{outputs for the source and the target domain}, i.e., at the prediction level.
+
+
+\paragraph{AdaptSegNet: Adversarial Discriminative Domain Adaptation.}
+\textbf{Observation:} the segmentation output space is \textit{structured} (layout, shape, spatial relations are shared across domains, even if appearance differs); softmax maps have \textit{low entropy}/ low variation (locally) on the supervised source.\\
+
+\textbf{Idea:} adapt at the \textit{output level}: make target predictions \textit{indistinguishable} from source ones. Vs.\ CyCADA: adversarial learning is (1) \textit{directly on the output/prediction space} (not features), via (2) a \textit{pixel-level discriminator} on segmentation maps.\\
+
+\textbf{Setup.} One \textit{shared} segmentation net $f$ produces softmax maps $P_s=f(I_s)$, $P_t=f(I_t)$; a discriminator $D$ outputs \textit{dense} per-pixel domain labels (source $=0$, target $=1$). Two losses train $f$: the standard segmentation cross-entropy $\mathcal{L}_{\text{seg}}$ on labeled source, and an adversarial term.
+\begin{align*}
+\mathcal{L}_{\text{adv},D} &= \mathbb{E}_{I_s}\!\Big[\textstyle\sum_{h,w}\log(1-D(P_s)_{(h,w)})\Big] + \mathbb{E}_{I_t}\!\Big[\textstyle\sum_{h,w}\log D(P_t)_{(h,w)}\Big]\\
+\mathcal{L}_{\text{adv},f} &= \mathbb{E}_{I_t}\!\Big[\textstyle\sum_{h,w}\log D(P_t)_{(h,w)}\Big]
+\end{align*}
+
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{img/AdaptSegNet.png}
+    \caption{AdaptSegNet}
+    \label{fig:AdaptSegNet}
+\end{figure}
+
+\textbf{Objective:} $f$ minimizes $\mathcal{L}_{\text{seg}}$ on source \textit{while} fooling $D$ (target predictions classified as source); $D$ maximizes domain separation. \textit{Intuition:} no labels in target, but forcing target output maps to look source-like transfers the learned, well-structured layout to the target domain.
+
+\paragraph{Self-Training Strategies (Pseudo-Labeling) in Target Domain}
+\textit{Idea:} use the model's own confident target predictions as \textbf{pseudo-labels} $\hat y$, retrain on them, repeat. Notation: $s/t$ index source/target images, $n$ pixels, $p_n(w,I)$ the softmax, $y$ one-hot GT. The three cases below are the \textit{same} cross-entropy, differing only in what plays the role of the target label.\\
+
+\textbf{1) Supervised (the ideal, unavailable).} If we \textit{had} target labels $y_t$, just do cross-entropy on both domains:
+\begin{equation*}
+\min_w \mathcal{L}_S(w) = -\sum_{s,n} y_{s,n}^\top\log p_n(w,I_s) \;-\; \sum_{t,n} y_{t,n}^\top\log p_n(w,I_t).
+\end{equation*}
+
+\textbf{2) Default self-training.} Replace the missing $y_t$ by pseudo-labels $\hat y_t$ and \textit{jointly} optimize weights \textbf{and} pseudo-labels - we only have labels for the source domain:
+\begin{equation*}
+\min_{w,\hat y} \mathcal{L}_U(w,\hat y) = -\sum_{s,n} y_{s,n}^\top\log p_n(w,I_s) \;-\; \sum_{t,n} \hat y_{t,n}^\top\log p_n(w,I_t),\quad \text{s.t. } \hat y_{t,n}\in\{e^{(i)}\}.
+\end{equation*}
+Constraint: each $\hat y_{t,n}$ is a \textbf{one-hot} vector $e^{(i)}\in\mathbb{R}^C$ (a hard class). \textit{Problem:} \textit{every} pixel is forced to take a label, so low-confidence/wrong pseudo-labels get reinforced.\\
+
+\textbf{3) Curriculum self-training.} Two changes let the model \textbf{abstain} on uncertain pixels:
+\begin{equation*}
+\min_{w,\hat y} \mathcal{L}_{ST} = -\sum_{s,n} y_{s,n}^\top\log p_n(w,I_s) \;-\; \sum_{t,n}\Big[\hat y_{t,n}^\top\log p_n(w,I_t) + k\,\lVert\hat y_{t,n}\rVert_1\Big],\quad \hat y_{t,n}\in\{e^{(i)}\}\cup\{\mathbf 0\},\ k>0.
+\end{equation*}
+(i) the pseudo-label may now be the \textbf{zero vector $\mathbf 0$} (= don't label this pixel); (ii) the regularizer $k\lVert\hat y_{t,n}\rVert_1$ \textit{rewards abstaining} ($\lVert\hat y\rVert_1=1$ if labeled, $0$ if not) $\rightarrow$ a pixel is only labeled if it pays off the penalty $k$. \textbf{Solved by alternating block coordinate descent} (fix one block, optimize the other):\\
+
+\textbf{Step a) pseudo-label update ($w$ fixed).} Drop the (constant) source term; only the target term depends on $\hat y$:
+\begin{equation*}
+\min_{\hat y}\ -\sum_{t,n}\Big[\sum_{c=1}^C \hat y^{(c)}_{t,n}\log p_n(c\,|\,w,I_t) + k\,\lVert\hat y_{t,n}\rVert_1\Big],\quad \hat y_{t,n}=[\hat y^{(1)}_{t,n},\dots,\hat y^{(C)}_{t,n}]\in\{e^{(i)}\}\cup\{\mathbf 0\}.
+\end{equation*}
+This \textbf{decomposes over pixels} (each $(t,n)$ is independent) $\rightarrow$ the optimum is a \textbf{trivial per-pixel closed form}: take the most confident class $c^*=\arg\max_c p_n(c)$ and
+\begin{equation*}
+\hat y_{t,n} = \begin{cases} e^{(c^*)}, & p_n(c^*) > e^{-k}\ \ (\text{confident enough}),\\ \mathbf 0, & \text{otherwise (abstain)}.\end{cases}
+\end{equation*}
+\textit{Derivation:} per pixel, labeling with $c^*$ costs $-\log p_{c^*}-k$, abstaining ($\hat y=\mathbf 0$) costs $0$; label iff $-\log p_{c^*}-k<0 \Leftrightarrow p_{c^*}>e^{-k}$.\\
+
+\textbf{Step b) network update ($\hat y$ fixed).} Standard supervised cross-entropy training on the source GT \textbf{plus} the admitted target pseudo-labels.\\
+
+\textbf{Curriculum $=$ schedule of $k$.} $k$ sets the confidence threshold $e^{-k}$ for \textbf{admitting} pseudo-labels: small $k\Rightarrow$ high bar (few, very confident labels); growing $k$ over rounds lowers the bar to admit progressively more (harder) pixels --- \textbf{easy-to-hard}, which is the curriculum.\\
+
+\textbf{Class-balanced self-training (CBST).} \textit{Problem:} a single $k$ biases pseudo-labels towards \textbf{easily transferable classes} (e.g.\ road/sky) whose target predictions are systematically more confident $\rightarrow$ rare/hard classes never get labeled. \textit{Fix:} a \textbf{per-class} threshold $k_c$ (class-adaptive regularization), replacing the single penalty $k\lVert\hat y_{t,n}\rVert_1$ by the per-class $\sum_c k_c\,\hat y^{(c)}_{t,n}$:
+\begin{equation*}
+\min_{w,\hat y}\mathcal{L}_{CB} = -\sum_{s,n} y_{s,n}^\top\log p_n(w,I_s) \;-\; \sum_{t,n}\sum_{c=1}^C\Big[\hat y^{(c)}_{t,n}\log p_n(c\,|\,w,I_t) + k_c\,\hat y^{(c)}_{t,n}\Big],\quad k_c>0\ \forall c.
+\end{equation*}
+The Step a) per-pixel solution becomes (same argument, threshold now $e^{-k_c}$ per class):
+\begin{equation*}
+\hat y^{(c)*}_{t,n} = \begin{cases} 1, & c=\arg\max_c \dfrac{p_n(c\,|\,w,I_t)}{e^{-k_c}}\ \text{ and }\ \dfrac{p_n(c\,|\,w,I_t)}{e^{-k_c}}>1,\\[2mm] 0, & \text{otherwise}.\end{cases}
+\end{equation*}
+\textit{Intuition:} confidence is \textbf{normalized per class} by $e^{-k_c}$ ($k_c$ tuned so each class admits a comparable fraction) $\rightarrow$ \textbf{balances} which classes contribute labels. Consequence: the winning class is the largest \textit{normalized} score, so the chosen pseudo-label can \textbf{differ from the raw argmax} (a less-confident but under-represented class can win).\\
+
+\textbf{Selecting the thresholds (per round).} Set them by a target \textit{proportion} $p$ of pixels to label, not by a fixed probability:
+\begin{itemize}
+    \item \textbf{Basic ST:} pick $k$ so a fraction $p$ of \textit{all} target pixels get a pseudo-label (e.g.\ $p$ ramped $0.2\!\to\!0.5$ in steps of $0.05$ over rounds $=$ the curriculum).
+    \item \textbf{Class-balanced ST:} pick $k_c$ \textit{per class} so a fraction $p$ of the target pixels \textit{whose most-probable class is $c$} have $p_n(c)\ge e^{-k_c}$ $\rightarrow$ each class admits its own top-$p$ regardless of absolute confidence.
+\end{itemize}
+\textit{Intuition:} thresholding on a per-class \textbf{percentile} (top-$p$) rather than a global probability is exactly what stops easy classes from dominating.
 
 \subsubsection{Test-Time Domain Adaptation}
+Adapt a pretrained model \textit{on the fly} to unlabeled test data: a \textbf{single online pass}, predicting as data streams in (no source data, no target labels, no retraining round).
 
+\paragraph{Test Entropy Minimization (TENT).}
+\textit{Idea:} modulate the network online to \textbf{minimize the entropy} of its own predictions over each input batch (confident predictions $=$ low entropy $=$ proxy for being well-adapted); the parameters updated by the backward pass on batch $i$ are used in the forward pass for batch $i\!+\!1$. \textit{Challenge:} the full network is non-linear and its parameters high-dimensional $\rightarrow$ \textbf{cannot} be effectively optimized in a single pass.\\
 
+\textbf{Solution: only touch BatchNorm.} Optimize \textit{just} the \textbf{batch-norm} statistics and affine parameters, because they are \textbf{linear} and act \textbf{per-channel} (cheap, stable to update online):
+\begin{itemize}
+    \item \textbf{Statistics:} discard the fixed train-set running mean/var (normally frozen at inference) and instead compute mean/var \textbf{adaptively per test batch}. Side effect: an output now depends on the \textit{other inputs} in its batch, unlike the usual fixed-linear-transform inference.
+    \item \textbf{Parameters:} at each backward pass, update the BN \textbf{scale $\gamma$ and shift $\beta$} of every layer via the gradient of the entropy loss. These vary dynamically across batches through testing.
+\end{itemize}
+\textit{Intuition:} the domain shift is largely a shift in \textit{feature statistics}; re-estimating BN stats + nudging $\gamma,\beta$ to sharpen predictions realigns the features cheaply, without labels. A \textbf{single epoch} suffices (offline, one can run multiple epochs over the whole test set).
 
 \newpage
 \section{Part V: Temporal Perception}
