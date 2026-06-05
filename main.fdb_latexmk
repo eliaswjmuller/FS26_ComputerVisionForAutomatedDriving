@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1780594749.948 "/Users/elias.mueller/Code/04_Studies/FS26_ComputerVisionForAutomatedDriving/main.tex" "main.pdf" "main" 1780594752.9675 0
-  "/Users/elias.mueller/Code/04_Studies/FS26_ComputerVisionForAutomatedDriving/main.tex" 1780594750.96188 129516 7265a90cf12acaa5598b0c727790b3ea ""
+["pdflatex"] 1780657627.77225 "/Users/elias.mueller/Code/04_Studies/FS26_ComputerVisionForAutomatedDriving/main.tex" "main.pdf" "main" 1780657630.73414 0
+  "/Users/elias.mueller/Code/04_Studies/FS26_ComputerVisionForAutomatedDriving/main.tex" 1780657627.56363 133085 3d0f605b19150d66edfd477ebbacc517 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1136849721 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/tfm/jknappen/ec/tcrm1000.tfm" 1136768653 1536 e07581a4bb3136ece9eeb4c3ffab8233 ""
@@ -236,10 +236,10 @@
   "img/lidar.png" 1778678402.5445 449132 1d333263cf5980797698ff005eb09c39 ""
   "img/transpose_conv_1d.png" 1779700226.98256 236822 908050821ab382ab547a3ddb05ff3390 ""
   "img/unet.png" 1779699782.7783 584318 a9978751707a7ebe2ac5dd622c01b317 ""
-  "main.aux" 1780594752.87785 28191 44f41be935f2fe4114eeabc0ea1d4724 "pdflatex"
-  "main.out" 1780594752.88661 10835 f50b5c951273084696ef4e40d59bba67 "pdflatex"
-  "main.tex" 1780594750.96188 129516 7265a90cf12acaa5598b0c727790b3ea ""
-  "main.toc" 1780594752.89179 12891 60041d451a8306a92f9dc806d407d078 "pdflatex"
+  "main.aux" 1780657630.65145 28565 53e557fd9dce157b364bf9b267ba1f7d "pdflatex"
+  "main.out" 1780657630.65792 10835 f50b5c951273084696ef4e40d59bba67 "pdflatex"
+  "main.tex" 1780657627.56363 133085 3d0f605b19150d66edfd477ebbacc517 ""
+  "main.toc" 1780657630.6616 13142 d727fbd6a62d6dc1af555e118d38b45f "pdflatex"
   (generated)
   "main.aux"
   "main.log"

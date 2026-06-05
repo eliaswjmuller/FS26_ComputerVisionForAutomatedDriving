@@ -1524,7 +1524,7 @@ For SAE level 5 (full automation) we require \textit{unlimited} Operation Design
 \end{itemize}
 
 \subsubsection{Input-Level Adaptation}
-Align the \textit{image distributions of the source and the target domain} --- for \textit{low-level} domain shifts (e.g. fog/no fog).
+Align the \textit{image distributions of the source and the target domain}: for \textit{low-level} domain shifts (e.g. fog/no fog).
 
 \paragraph{Physics-based Domain Translation}
 Leverage known priors of the domain shift: no target needed, reliable, controllable, and interpretable; but hard or impossible: assumptions necessary.\\
@@ -1564,14 +1564,36 @@ and analogously $P_{R,\text{snow}}^0$ for the real target at $R_0$ (with $\rho_0
 \textbf{Intuition:} each flake reflects back the beam fraction $\theta_j/\theta$ it occludes $\rightarrow$ one $\sin^2$ peak per flake at its range $R_j$. Near flakes have small $R_j$, so the $1/R_j^2$ gain (plus high snow reflectivity $\rho_s$) can make a clutter peak \textit{exceed} the true target peak $\rightarrow$ spurious foreground points, while the target only receives the un-occluded fraction $\theta_0/\theta$ (weakened/lost return).
 
 \paragraph{Learned Domain Translation}
+Data-driven domain translation: requires target data, can learn complex shifts but unrealiable, not very controllable nor interpretable. I.e., use a NN (image translator) to translate the source image into data representing the target domain.
+
+\subparagraph{Paired Data / Supervised.} Works primarily when we have \textit{paired data}. Often misaligned pairs in reality (e.g. we can have driving data from the same location at different day times, yet the camera is not eactly the same, and dynamic objects have are different).
+
+\subparagraph{Unpaired Data / Unsupervised.} Only two \textit{unaligned} sets $X_1$ (e.g.\ day), $X_2$ (e.g.\ night) --- \textit{no} correspondence $x_i\leftrightarrow y_i$. Realistic for driving (can't capture the exact same scene at two times of day).\\
+
+\textbf{GANs.} \textbf{Generator} produces fake samples (from noise), \textbf{Discriminator} learns to tell real vs.\ fake $\rightarrow$ $G$ is pushed to match the target distribution.\\
+
+\textbf{Conditional GAN for translation.} Feed a source image instead of noise: a \textbf{translation net} $F_{1\to2}$ maps $X_1\!\to\!X_2$, $D$ enforces outputs \textit{look like} domain~2. Only needs a domain-2 set, no pairs (e.g. translate dogs to cats).\\
+
+\textbf{Mode Collapse.} GANs only force $F(x)\in X_2$, \textit{not} that the output \textbf{corresponds} to the input $\rightarrow$ $F$ can map all day images to one generic night image and still fool $D$ (scene content lost).\\
+
+\textbf{CycleGAN.} Add a \textbf{cycle-consistency loss}: round-trip $x \xrightarrow{G} G(x) \xrightarrow{F} F(G(x))$ must reconstruct the input, $\lVert F(G(x))-x\rVert_1$ small. \textit{Intuition:} ties output to input \textbf{without} paired data $\rightarrow$ kills mode collapse (a collapsed mapping can't be inverted). E.g.\ \textbf{time-of-day translation} (day $\leftrightarrow$ twilight $\leftrightarrow$ night) to synthesize labeled adverse-condition data.
 
 \paragraph{Hand-crafted Domain Transformation}
+Transform in a fixed, \textit{non-learned} space (e.g.\ frequency): needs a target reference image; \textbf{controllable + interpretable}, but limited to the attributes of that one image and not always reliable.
+
+\subparagraph{Fourier Domain Adaptation (FDA).} \textbf{Observation:} high-level object attributes (shape of cars, humans) barely change across domains (low-frequency shift). \textbf{Hypothesis:} aligning only the \textit{low-level statistics} of source to target is a good UDA baseline: FDA does this at the \textbf{spectral level/ frequency decomposition}, non-learned.\\
+
+\textbf{Method.} Split the DFT into amplitude and phase, $\mathcal{F}(I)=\mathcal{F}^A(I)\,e^{j\mathcal{F}^P(I)}$. Low-level statistics live in the \textit{low-frequency amplitude} (near the center in fourier/ zero frequency), so \textbf{swap the source's low-freq amplitude for the target's}, keep the source \textit{phase} (= content). With low-pass mask $M_\beta(h,w)=\mathbf{1}_{(h,w)\in[-\beta H:\beta H,\,-\beta W:\beta W]}$ (replace the low-level frequencies):
+\begin{equation*}
+I_{s\to t}=\mathcal{F}^{-1}\!\Big(\big[\,M_\beta\,\mathcal{F}^A(I_t)+(1-M_\beta)\,\mathcal{F}^A(I_s)\,,\ \mathcal{F}^P(I_s)\big]\Big)
+\end{equation*}
+\textbf{Bandwidth $\beta$:} $\beta=0\Rightarrow$ output $=$ source; larger $\beta\Rightarrow$ closer to target \textit{but} more artifacts. \textit{Intuition:} cheap, interpretable "style transfer" $\rightarrow$ recolor the source to the target's look without touching structure. Bonus: varying $\beta$ yields \textbf{multiple diverse models} (one training set per $\beta$), which learned translators don't give for free.
 
 \subsubsection{Feature-Level Adaptation}
-Align the \textit{feature distributions of the source and the target domain} --- impose constraints/restict feature maps.
+Align the \textit{feature distributions of the source and the target domain}: impose constraints/restict feature maps.
 
 \subsubsection{Output-Level Adaptation}
-Align the \textit{outputs for the source and the target domain} --- e.g. align entropies of the per pixel segmentation.
+Align the \textit{outputs for the source and the target domain}: e.g. align entropies of the per pixel segmentation.
 
 \subsubsection{Test-Time Domain Adaptation}
 
