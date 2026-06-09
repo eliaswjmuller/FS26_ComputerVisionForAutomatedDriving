@@ -1721,7 +1721,214 @@ Adapt a pretrained model \textit{on the fly} to unlabeled test data: a \textbf{s
 \end{itemize}
 \textit{Intuition:} the domain shift is largely a shift in \textit{feature statistics}; re-estimating BN stats + nudging $\gamma,\beta$ to sharpen predictions realigns the features cheaply, without labels. A \textbf{single epoch} suffices (offline, one can run multiple epochs over the whole test set).
 
-\newpage
+
+\subsection{Sensor Fusion}
+Robust Perception across multiple modalities.
+\subsubsection{Basics and Taxonomy}
+\begin{itemize}
+    \item \textbf{Late Fusion}: Fuse individual \textit{results} (e.g. predictions) from the sensors. Seperate networks
+    \item \textbf{Early (Low-Level) Fusion}: Fuse the raw sensor data, or combining raw lidar with image features, then processed jointly through single architecture
+    \item \textbf{Mid-Level/ Deep Fusion}: Fuse internal features from the two sensors, i.e. feature extration is seperate, yet the task backbone network is shared
+    \item \textbf{Asymmetric Fusion}: Fuse object-level representations (i.e., results/predictions) from one sensor with feature-level or data-level representations from the other (just some fusiuon module required)
+    \item \textbf{Weak Fusion}: One sensor only for guidance (auxilliary/ condition) to the other for generating features or results (not the actual data or features used, hierarchical)
+\end{itemize}
+
+\textbf{Trade-offs (early vs.\ deep vs.\ late).}
+\begin{itemize}
+    \item \textbf{Early:} suffers \textit{inherent discrepancies} between modalities --- alignment, representation, sparsity --- fused too soon.
+    \item \textbf{Deep:} fixes this by processing modalities \textit{separately} first, but is \textbf{complex}, \textbf{sensitive to calibration}, and needs \textbf{abundant labeled multi-modal data}.
+    \item \textbf{Late} (fuse at \textit{object-candidate} level): \textbf{(+)} train modality-specific detectors on \textit{large unimodal} data, multi-modal data only needed for the small \textbf{fusion module}; \textbf{(+)} boxes are simpler to process than raw multi-modal data; \textbf{($\rightarrow$)} fusion just \textit{prunes/associates} predictions across modalities, so the unimodal detectors should be tuned for \textbf{maximum recall}.
+\end{itemize}
+
+\subsubsection{Lidar-Camera Fusion for 3D Object Detection}
+Improve lidar 3D detection networks with camera data (high-resolution features with color texture) for better recall on distant objects and localization accuracy.
+
+\paragraph{Frustum PointNets (Weak Lidar-Camera Fusion).}
+Camera is used as guidance to process and use the Lidar inputs. Use 2D BB (outputs from one. detection branch) to constrain/ filter out some of the lidar point cloud in the 3D search space.\\
+
+These 2D detectors are very strong, yet only operate in 2D. By using the perspective projection model of the camera we can project into the 3D space (as a frustum) of the Lidar and guide 3D detection. The 3D instance sementation is performed on the frustum's point cloud as binary point cloud segmentation (PointNet: Object of interest vs Background).
+The segemented set of points is input to an \textit{amodal 3D BB regression Point Net} which predicts box (residuals) that extends to the back part of the object, which is not visible by the lidar (thats amodal) --- reason about the invisible parts. \\
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{img/FrustumPointNets.png}
+    \caption{Frustum PointNets: weak fusion of Lidar and Camera Sensors}
+    \label{fig:FrustumPointNets}
+\end{figure}
+
+\textbf{Coordinate normalization (key idea).} Pose is factored out \textit{before} regressing the box, via a chain of canonicalizing transforms (each undone later to recover the absolute box) --- same philosophy as PointRCNN's canonical coordinate system, but in stages:
+\begin{enumerate}
+    \item \textbf{Camera $\to$ frustum} (\textit{rotation}): rotate so $+z$ aligns with the frustum's central axis (the 3D column derived from the camera image) $\rightarrow$ removes dependence on \textit{where} in the image the object sits (viewing direction).
+    \item \textbf{Frustum $\to$ 3D mask} (\textit{translation}): move the origin to the \textbf{centroid of the segmented object points} $\rightarrow$ centers the (partial) object.
+    \item \textbf{3D mask $\to$ 3D object} (\textit{translation, learned}): shift by the \textbf{T-Net}-estimated center --- a small regression PointNet predicting the true object center, since the segmentation centroid is biased by partial/occluded views.
+\end{enumerate}
+\textbf{Center decomposition.} The absolute 3D box center is the \textit{sum} of three parts: (1) segmented-points centroid, (2) T-Net residual, (3) the box head's regressed center residual. \textit{Intuition:} each transform moves into a more canonical frame, so the net only predicts small \textbf{residuals} from a normalized origin (easier/more stable), and the true center is reassembled by adding the shifts back.
+
+\paragraph{Multi-View 3D Object Detection Network (MV3D Asymmetric + Deep Fusion)}
+Working directly in the raw 3D space is more complex if we do not want to rely on 2D box predictions. We do this by using lower-dimensional spaces (projections) than raw 3D space considering 2D (birds-eye or camera perspective views).\\
+
+
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{img/MV3D.png}
+    \caption{Multi-View 3D Object Detection Network}
+    \label{fig:MV3D}
+\end{figure}
+
+\textbf{Asymmetric Fusion} via Object Level representation fused with features from other branches, and \textbf{deep fusion} at different layers in the network (multi-sensor features).\\
+
+For \textbf{driving scenes} the birds-eye view (from Lidar) is the primary modality (very decomposed and cononical repr.) using Conv layers for feature representation followed by some R-CNN approach for Object Classificaiton and 3D Box regression.\\
+\textbf{Lidar} creates a front-view (camera-like). Passed for feature repr. Same for the image data. These features are then used in \textit{asymmetric} fusion with the 3D proposals from the BEV $\rightarrow$ becomes a ROI proposal. (RoI Pooling (asymmetric fusion impl.) - fixed length features for all modalities/ views from the three different input features)\\
+\textit{Deep fusion} is then applied at the level of regions. \\
+
+\textbf{Why BEV? (vs.\ front/camera view).}
+\begin{itemize}
+    \item \textbf{Size preserved:} objects keep their physical size under BEV projection $\rightarrow$ \textit{small size variance} (no perspective scaling) $\rightarrow$ easier for anchor-based detection.
+    \item \textbf{No occlusion:} objects occupy \textit{different} parts of the ground plane $\rightarrow$ they don't overlap as in a perspective view.
+    \item \textbf{Sufficient for driving:} road-scene objects mostly \textit{lie/stand on the ground plane}, so the dropped height dimension costs little.
+\end{itemize}
+\textit{Limitations:} BEV is \textbf{coarse/sparse} $\rightarrow$ information lost especially for \textbf{small objects}; and it \textbf{cannot resolve multiple objects stacked along the vertical} ($z$) dimension.
+
+\paragraph{Augmenting Lidar Point Clouds}
+A common issue with Lidar PointClouds is the semantic differentiation of objects, e.g. a person vs. pole at distance, due to low vertical resolution. We aumgment these points with semantic features.\\
+
+\textbf{PointPainting (Eearly Fusion)}: Paint the point clouds (augment via concatenation of the lidar point x,y,z,intensity plus the feature info) based on the segmentation results (softmax scores) of an image based method. Using these painted Point Clouds (not voxelized) we can then apply Lidar Detectors (3D): $$ T = T_{(\text{camera} \leftarrow \text{ego})} \, T_{(\text{ego}_{t_c} \leftarrow \text{ego}_{t_l})} \, T_{(\text{ego} \leftarrow \text{lidar})}\quad \text{lidar→camera projection chain for sensor fusion} $$\\
+
+\textbf{MVX-Net (Multimodal VoxelNet)}: like PointPainting, but fuses \textit{2D-detector} features (VGG16 \textbf{conv5} from a Faster-RCNN backbone) instead of semantic segmentation features so we now use voxelized representations. Two variants:
+\begin{itemize}
+    \item \textbf{Early fusion:} project each point to the image, \textit{index} its conv5 feature, dim-reduce, \textbf{point-wise concat} with $(x,y,z,r)$ $\rightarrow$ VFE $\rightarrow$ 3D RPN (same as PointPainting, different features).
+    \item \textbf{Mid-level (voxel) fusion:} project each \textit{non-empty voxel} onto the image $\rightarrow$ \textbf{ROI-pool} the conv5 features in that region $\rightarrow$ concat with the VFE-encoded voxel feature. Fuses deeper, can include empty voxels, and is \textbf{more memory-efficient} (fewer features per point in the VFE).
+\end{itemize}
+
+\textbf{Which image features to fuse?}
+\begin{itemize}
+    \item \textbf{Segmentation softmax} (PointPainting): informative for \textit{classification} but \textit{not} for box localization; pixel-level semantic labels are usually \textbf{unavailable} in 3D-detection datasets $\rightarrow$ unreliable (missing supervision).
+    \item \textbf{2D-detection features}: learnt \textbf{reliably} (abundant GT from the 3D box annotations) and more \textit{relevant} to 3D detection (similar tasks). But MVX-Net's conv5 is high-level/global $\rightarrow$ \textbf{poorly localized}.
+\end{itemize}
+
+\textbf{PointAugmenting (Early \& Mid-level Fusion)}: fixes the localization issue by using \textbf{mid-level} 2D detection features (preserve fine spatial detail).
+\begin{itemize}
+    \item \textbf{Early:} fetch image features for the corresponding lidar points (point-wise), processed \textit{separately} from the lidar features by the voxel encoder.
+    \item \textbf{Mid-level:} fuse \textit{inside} the 3D backbone --- after the voxel grid is reduced to a 2D BEV map, before the RPN.
+\end{itemize}
+
+\textbf{Limitations of point-level fusion:} (i) simple \textbf{addition/concatenation} of lidar + image features $\rightarrow$ performance \textit{deteriorates} when image features are degraded (e.g.\ low illumination); (ii) \textbf{hard association} (one pixel per point) discards most of the rich image features around the projection and is \textbf{sensitive to extrinsic calibration \& lidar-camera synchronization} (prone to misalignment).
+
+\paragraph{TransFusion (Mid-level Fusion with Soft Association)}
+Replaces the brittle \textit{hard} association by a \textbf{soft association} of lidar and image features via \textbf{cross-attention}: the network \textit{implicitly} learns which image features to attend to (and which to ignore) per object $\rightarrow$ \textbf{robust} to degraded images and calibration/sync errors. A transformer detector with two decoder layers: queries attend first to \textbf{LiDAR BEV} features ($K,V$) $\rightarrow$ initial prediction, then to \textbf{image} features ($K,V$) $\rightarrow$ final output. Unlike DETR, queries are \textbf{input-dependent} and \textbf{image-guided} (not fixed/learned).\\
+
+\textbf{Query initialization.} Predict a \textit{class-specific} BEV heatmap $\hat S\in\mathbb{R}^{X\times Y\times K}$, run \textbf{NMS}, take the \textbf{top-$N$} peaks as queries (positions + features) $\rightarrow$ queries already sit on likely objects (fast convergence vs.\ DETR's random queries).\\
+
+\textbf{Image guidance.} \textbf{Collapse image features along the height axis} (max-pool, since $\le 1$ object per image column) $\rightarrow$ cheap, little info lost; use them as $K,V$ in multi-head attention with LiDAR BEV as $Q$ $\rightarrow$ \textbf{fused BEV features} that hint at object positions, improving query init.\\
+
+\textbf{SMCA --- spatially modulated cross-attention.} \textit{Problem:} lidar and image come from \textit{different domains}, so queries may attend to image regions unrelated to the box $\rightarrow$ slow training. \textit{Fix:} softly constrain attention to a 2D region around the predicted center (do not attend blindly): (1) project the query's BEV position to the camera view $(c_x,c_y)$; (2) multiply the attention map element-wise by a soft Gaussian mask
+\begin{equation*}
+M_{ij}=\exp\!\Big(-\tfrac{(i-c_x)^2+(j-c_y)^2}{\sigma r^2}\Big).
+\end{equation*}
+\textit{Intuition:} focuses on foreground pixels near the object center, ignoring background $\rightarrow$ cleaner semantics for classification + box regression, faster to train.
+
+\paragraph{Camera-Lidar Object Candidates.}
+\textbf{CLOCs} $=$ \textbf{late fusion} that \textit{refines 3D-detection confidences} using 2D detections. Works on \textit{candidates} (boxes + scores), so it combines with \textbf{any} 2D and 3D detector that outputs confidence --- no joint backbone training.\\
+
+\textbf{Inputs.} $k$ 2D detections $P^{2D}$ with $p_i^{2D}=[x_{i1},y_{i1},x_{i2},y_{i2},s_i^{2D}]$, and $n$ 3D detections $P^{3D}$ with $p_j^{3D}=[h,w,l,x,y,z,\theta,s_j^{3D}]$ (boxes $+$ single-class confidence).\\
+
+\textbf{Association tensor.} Project each 3D box to the image and compute $\mathrm{IoU}_{i,j}$ with every 2D box (\textit{geometric consistency} of a cross-modal pair). Build a \textbf{sparse} tensor $\mathbf T\in\mathbb{R}^{k\times n\times 4}$ filled \textit{only} where $\mathrm{IoU}_{i,j}>0$:
+\begin{equation*}
+\mathbf T_{i,j}=\{\mathrm{IoU}_{i,j},\,s_i^{2D},\,s_j^{3D},\,d_j\},
+\end{equation*}
+with $d_j$ the lidar-origin-to-box-center distance in the horizontal plane, normalized by lidar range. A 3D box with \textit{no} 2D overlap gets $\mathrm{IoU}=s^{2D}=-1$ (encodes "unmatched").\\
+
+\textbf{Fusion network.} Gather the $p$ non-empty entries $\rightarrow (1\times p\times 4)$, pass through $1\times1$ convs $\rightarrow (1\times p\times 1)$, scatter back into $\mathbf T_{out}\in\mathbb{R}^{k\times n\times 1}$ by index, \textbf{max-pool over the $k$ (2D) axis} $\rightarrow$ squeeze $\rightarrow$ \textbf{$n$ refined scores} (one per 3D detection). Trained with \textbf{focal loss}.\\
+
+\textbf{Ablation (KITTI car).} Every channel $+$ focal loss contributes; full config $\rightarrow$ 3D AP \textbf{82.73} (BEV 92.57) vs.\ SECOND baseline $79.94$. The IoU (geometric cue) and the 3D score $s^{3D}$ matter most.     
+
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{img/CLOCs.png}
+    \caption{Camera-Lidar Object Candidates}
+    \label{fig:CLOCs}
+\end{figure}
+
+\subsubsection{Radar-Camera Fusion for 3D Object Detection}
+Unlike lidar-camera (which improves the already-precise \textit{lidar} 3D detection with camera), radar gives only \textbf{coarse 2D azimuth-range} measurements (sparse points or a dense BEV map), \textit{not} precise 3D $\rightarrow$ radar \textbf{cannot be the primary sensor}. So radar-camera fusion improves \textbf{camera-based} 3D detection with radar as an \textit{additional} modality; the two are \textbf{complementary} --- camera gives semantics + lateral position, radar gives \textbf{depth/range} and (Doppler) \textbf{velocity}.
+
+\paragraph{CenterFusion (Asymmetric Radar-Camera Fusion).}
+Built on \textbf{CenterNet} (objects as center points). Pipeline:
+\begin{enumerate}
+    \item \textbf{Image $\to$ primary heads:} FCN backbone $\rightarrow$ center heatmap (HM) $+$ primary regressions (offset, WH, dimension, depth, rotation) $\rightarrow$ a \textit{preliminary} 3D box per object.
+    \item \textbf{Frustum association} (the \textit{asymmetric} step): use each preliminary box --- \textit{object-level}, from the camera --- to associate \textit{feature-level} radar data (see below).
+    \item \textbf{Concat $+$ secondary heads:} concatenate the associated radar features with image features $\rightarrow$ secondary regressions refine \textbf{depth, velocity, rotation, attributes}.
+    \item \textbf{3D box decoder:} takes depth/velocity/rotation/attributes from the \textit{secondary} heads, all other properties from the \textit{primary} heads.
+\end{enumerate}
+
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{img/CenterFusion.png}
+    \caption{CenterFusion}
+    \label{fig:CenterFusion}
+\end{figure}
+
+\textbf{Frustum-based radar association.} Radar is sparse and \textit{lacks the vertical dimension}, so: (i) expand each radar point into a fixed-size \textbf{vertical pillar} (accounts for missing/inaccurate height); (ii) associate a pillar with an object if (part of) it lies inside the object's \textbf{ROI frustum} (built from the preliminary 3D box); (iii) if several radar detections match, take the \textbf{closest}. (A margin $\delta$ enlarges the frustum at test time.)\\
+
+\textbf{Radar feature extraction.} For each associated object, generate radar \textbf{heatmap channels} --- radial velocity in $x$, $y$ and \textbf{depth} --- placed in a region around the object center scaled by its box size ($F^j_{x,y,i}=\tfrac{1}{M_i}f_i$ inside $|x-c_x^j|\le\alpha w^j,\ |y-c_y^j|\le\alpha h^j$, else $0$), then \textbf{concatenated with the image features}. Overlap rule: where two objects' heatmaps overlap, the \textbf{smaller-depth (closer)} object dominates (only the closest is fully visible).
+
+
+\subsubsection{Multi-Model 2D Object Detection}
+\textbf{Why 2D detection at all?} Many salient objects are \textit{missing from the lidar point cloud} (e.g.\ \textbf{42\%} of objects in DENSE's "dense fog" split get only 2D, not 3D, annotations). 2D boxes still give \textbf{class, location, size} --- useful for downstream prediction/planning. So fuse \textit{all} sensors with the basic camera modality for 2D tasks too.\\
+
+\textbf{Why fuse for 2D?} Cameras are \textbf{passive} $\rightarrow$ degrade badly in \textbf{low illumination} (night) or \textbf{high dynamic range}. Other sensors are \textbf{complementary}:
+\begin{itemize}
+    \item \textbf{Lidar:} robust to illumination, rich 3D structure, but sensitive to particles (fog/rain/snow).
+    \item \textbf{Radar:} robust to illumination \textit{and} weather, but coarse 2D readings + noisy.
+\end{itemize}
+\textit{Rationale:} full autonomy needs robust perception under \textbf{all} visual conditions $\rightarrow$ no single modality suffices.
+
+\paragraph{CRF-Net (Camera-Radar Fusion for 2D Detection)}
+\textbf{Challenge --- association.} 2D radar has \textit{no height} (vertical) info. \textit{Fix:} extend each radar point into a \textbf{vertical pillar} spanning $3$\,m from the ground plane (covers an object's vertical extent), project pillars to the image as \textbf{1-pixel-wide lines}, and build a \textbf{radar image} whose channels paint each pillar with \textbf{radar distance \& cross-section} (pixels outside any pillar $=0$).\\
+
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{img/CRFNET.png}
+    \caption{CRFNET}
+    \label{fig:Camera-Radar Fusion for 2D Detection}
+\end{figure}
+
+\textbf{Multi-level fusion (RetinaNet $+$ FPN backbone).} Radar distance/cross-section at a pixel is \textit{more} informative than a plain RGB value $\rightarrow$ \textbf{early fusion is suboptimal}, but the right abstraction level for mid-fusion is unclear. \textit{Solution:} \textbf{fuse at multiple deep layers} (concatenate radar + image feature maps at several VGG blocks) and let the network \textit{learn where} to fuse most strongly.\\
+
+\textbf{BlackIn training.} The net is pretrained \textit{image-only}; to force it to actually use radar (and depart from the camera-only optimum), \textbf{randomly deactivate the camera-input neurons} per batch with fixed prob.\ ($0.2$) --- a dropout-on-one-modality trick that pushes reliance onto the radar branch.
+
+\paragraph{Robust Sensor Fusion}
+\textit{Problem:} previous methods assume sensor streams are \textbf{consistent \& redundant}, but adverse weather/illumination cause \textbf{asymmetric failures} (one modality degrades, others don't). Need to \textbf{fuse adaptively} --- across samples and within a sample --- learning to \textbf{ignore} noisy/degraded (regions of) measurements and \textbf{rely on} high-\textbf{SNR} ones. Two solutions:
+\begin{itemize}
+    \item \textbf{Entropy-based fusion:} trust the lower-entropy (more confident) sensor/region. \textit{Caveat:} "high entropy $\Rightarrow$ low SNR" does \textit{not} always hold --- e.g.\ lidar in snowfall (spurious confident clutter).
+    \item \textbf{Attention-based fusion:} learn the per-sensor/per-region weight \textbf{implicitly from data} via \textbf{cross-attention} (as in TransFusion) --- no hand-set rule.
+\end{itemize}
+\textbf{Scaling issue.} Naive pairwise feature exchange scales \textbf{quadratically} with the number of modalities (memory \& compute). Cross-attention only handles \textbf{two streams} --- a \textit{main} stream (queries) and an \textit{auxiliary} one (keys/values) --- so the open question is how to apply it efficiently to an \textbf{arbitrary number} of modalities.\\
+
+\textbf{HRFuser} answers this: a \textbf{modular} multi-resolution architecture (generalizes \textbf{HRNet} to multiple modalities) with \textbf{camera as primary} and extra sensors as additional branches. Fusion uses \textbf{multi-window cross-attention (MWCA)} blocks whose \textbf{parallel cross-attention} (camera as query, each extra sensor as keys/values, run in parallel) scales to an \textbf{arbitrary number} of sensors --- avoiding the quadratic blow-up.
+
+\subsection{Visual Grounding, Anomaly Segmentation, and Vehicle-to-Vehicle Communication}
+\subsubsection{Visual Grounding}
+\textit{Motivation:} an ADS carries \textbf{passengers} who may give \textbf{natural-language instructions} tied to the driving task (e.g.\ "park behind the red car on the right"), to be processed in \textit{real time} $\rightarrow$ \textbf{verbo-visual perception}.\\
+
+\textbf{Definition.} Given (1) a visual scene and (2) a \textbf{verbal description} of an object in it, \textbf{detect the referred object} --- i.e.\ "\textbf{ground}" the description in the scene (a.k.a.\ \textbf{referral-based object detection}). Variants by input: \textbf{2D} (image) vs.\ \textbf{3D} (colored point cloud).\\
+
+\textbf{3D visual grounding --- task variants.}
+\begin{itemize}
+    \item \textbf{Referral-based 3D localization:} detect the referred object \textit{directly} from the point cloud.
+    \item \textbf{Referral-based 3D identification:} \textit{classify} which of the \textit{given} boxes (all objects of the referred class) is the referred one.
+\end{itemize}
+\textit{Localization is harder} than identification: it must \textbf{detect} multiple candidates across \textit{several} classes (not just the referred class) \textit{and} \textbf{discriminate} the referred object from all other candidates.
+
+\subsubsection{Anomaly Segmentation}
+\subsubsection{Vehicle-to-Vehicle Communication for Perception}
+
+
+
 \section{Part V: Temporal Perception}
 
 \end{document}

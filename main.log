@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.13)  5 JUN 2026 16:20
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.13)  9 JUN 2026 15:08
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -715,7 +715,7 @@ Overfull \hbox (14.89499pt too wide) in paragraph at lines 93--94
 []\OT1/cmr/bx/n/10 Definition 4 \OT1/cmr/m/n/10 (Op-er-a-tional De-sign Do-main (ODD))\OT1/cmr/bx/n/10 . []\OT1/cmr/m/it/10 Con-di-tions (en-vi-ron-men-tal, ge-o-graph-i-cal, tem-po-ral, traf-fic/roadway)
  []
 
-<img/SAE_Levels.png, id=267, 3071.475pt x 1104.125pt>
+<img/SAE_Levels.png, id=312, 3071.475pt x 1104.125pt>
 File: img/SAE_Levels.png Graphic file (type png)
 <use img/SAE_Levels.png>
 Package pdftex.def Info: img/SAE_Levels.png  used on input line 107.
@@ -726,7 +726,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 113--114
  []
 
 [3{/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc} <./img/SAE_Levels.png>]
-<img/lidar.png, id=286, 1955.305pt x 985.6825pt>
+<img/lidar.png, id=331, 1955.305pt x 985.6825pt>
 File: img/lidar.png Graphic file (type png)
 <use img/lidar.png>
 Package pdftex.def Info: img/lidar.png  used on input line 133.
@@ -736,7 +736,7 @@ Package pdftex.def Info: img/lidar.png  used on input line 133.
 LaTeX Font Warning: Font shape `OT1/cmss/bx/it' undefined
 (Font)              using `OT1/cmss/bx/n' instead on input line 138.
 
-<img/LidarBistatic.png, id=287, 838.13126pt x 355.3275pt>
+<img/LidarBistatic.png, id=332, 838.13126pt x 355.3275pt>
 File: img/LidarBistatic.png Graphic file (type png)
 <use img/LidarBistatic.png>
 Package pdftex.def Info: img/LidarBistatic.png  used on input line 148.
@@ -787,13 +787,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 301--303
  []
 
 [7] [8] [9]
-<img/transpose_conv_1d.png, id=333, 1146.2825pt x 277.035pt>
+<img/transpose_conv_1d.png, id=378, 1146.2825pt x 277.035pt>
 File: img/transpose_conv_1d.png Graphic file (type png)
 <use img/transpose_conv_1d.png>
 Package pdftex.def Info: img/transpose_conv_1d.png  used on input line 468.
 (pdftex.def)             Requested size: 303.53708pt x 73.35896pt.
  [10]
-<img/unet.png, id=338, 1313.90875pt x 521.95pt>
+<img/unet.png, id=383, 1313.90875pt x 521.95pt>
 File: img/unet.png Graphic file (type png)
 <use img/unet.png>
 Package pdftex.def Info: img/unet.png  used on input line 481.
@@ -803,7 +803,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 489--491
 
  []
 
-<img/atrous_rates.png, id=339, 1150.2975pt x 244.915pt>
+<img/atrous_rates.png, id=384, 1150.2975pt x 244.915pt>
 File: img/atrous_rates.png Graphic file (type png)
 <use img/atrous_rates.png>
 Package pdftex.def Info: img/atrous_rates.png  used on input line 494.
@@ -824,7 +824,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 527--528
  []
 
 [12] [13]
-<img/FasterRCNN.png, id=371, 1391.1975pt x 419.5675pt>
+<img/FasterRCNN.png, id=416, 1391.1975pt x 419.5675pt>
 File: img/FasterRCNN.png Graphic file (type png)
 <use img/FasterRCNN.png>
 Package pdftex.def Info: img/FasterRCNN.png  used on input line 604.
@@ -839,13 +839,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 654--657
 
  []
 
-<img/DETR.png, id=379, 994.71625pt x 325.215pt>
+<img/DETR.png, id=424, 994.71625pt x 325.215pt>
 File: img/DETR.png Graphic file (type png)
 <use img/DETR.png>
 Package pdftex.def Info: img/DETR.png  used on input line 668.
 (pdftex.def)             Requested size: 455.2979pt x 148.85635pt.
 [15 <./img/DETR.png>]
-<img/MaskRCNN.png, id=386, 1263.72125pt x 362.35374pt>
+<img/MaskRCNN.png, id=431, 1263.72125pt x 362.35374pt>
 File: img/MaskRCNN.png Graphic file (type png)
 <use img/MaskRCNN.png>
 Package pdftex.def Info: img/MaskRCNN.png  used on input line 690.
@@ -865,7 +865,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 797--799
 
  []
 
-<img/MaskFormer.png, id=405, 1174.3875pt x 277.035pt>
+<img/MaskFormer.png, id=450, 1174.3875pt x 277.035pt>
 File: img/MaskFormer.png Graphic file (type png)
 <use img/MaskFormer.png>
 Package pdftex.def Info: img/MaskFormer.png  used on input line 808.
@@ -891,7 +891,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 872--875
  []
 
 [20]
-<img/P3Depth.png, id=422, 1205.50375pt x 343.2825pt>
+<img/P3Depth.png, id=468, 1205.50375pt x 343.2825pt>
 File: img/P3Depth.png Graphic file (type png)
 <use img/P3Depth.png>
 Package pdftex.def Info: img/P3Depth.png  used on input line 896.
@@ -906,7 +906,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 916--917
 
  []
 
-<img/Stereo_Setup.png, id=423, 1107.13625pt x 321.2pt>
+<img/Stereo_Setup.png, id=469, 1107.13625pt x 321.2pt>
 File: img/Stereo_Setup.png Graphic file (type png)
 <use img/Stereo_Setup.png>
 Package pdftex.def Info: img/Stereo_Setup.png  used on input line 922.
@@ -916,35 +916,35 @@ Underfull \hbox (badness 10000) in paragraph at lines 937--939
 
  []
 
-<img/Sieamese.png, id=432, 1012.78375pt x 301.125pt>
+<img/Sieamese.png, id=478, 1012.78375pt x 301.125pt>
 File: img/Sieamese.png Graphic file (type png)
 <use img/Sieamese.png>
 Package pdftex.def Info: img/Sieamese.png  used on input line 963.
 (pdftex.def)             Requested size: 404.71353pt x 120.32838pt.
 [22 <./img/Sieamese.png>]
-<img/DepthAndMotion.png, id=439, 1200.485pt x 262.9825pt>
+<img/DepthAndMotion.png, id=485, 1200.485pt x 262.9825pt>
 File: img/DepthAndMotion.png Graphic file (type png)
 <use img/DepthAndMotion.png>
 Package pdftex.def Info: img/DepthAndMotion.png  used on input line 996.
 (pdftex.def)             Requested size: 404.71353pt x 88.65845pt.
  [23 <./img/DepthAndMotion.png>]
-<img/T-Net.png, id=446, 856.19875pt x 159.59625pt>
+<img/T-Net.png, id=492, 856.19875pt x 159.59625pt>
 File: img/T-Net.png Graphic file (type png)
 <use img/T-Net.png>
 Package pdftex.def Info: img/T-Net.png  used on input line 1031.
 (pdftex.def)             Requested size: 404.71353pt x 75.43883pt.
-<img/PointNetClassification.png, id=447, 974.64125pt x 189.70876pt>
+<img/PointNetClassification.png, id=493, 974.64125pt x 189.70876pt>
 File: img/PointNetClassification.png Graphic file (type png)
 <use img/PointNetClassification.png>
 Package pdftex.def Info: img/PointNetClassification.png  used on input line 1041.
 (pdftex.def)             Requested size: 505.89pt x 98.46964pt.
-<img/PointNetSegmentation.png, id=448, 974.13937pt x 223.33438pt>
+<img/PointNetSegmentation.png, id=494, 974.13937pt x 223.33438pt>
 File: img/PointNetSegmentation.png Graphic file (type png)
 <use img/PointNetSegmentation.png>
 Package pdftex.def Info: img/PointNetSegmentation.png  used on input line 1052.
 (pdftex.def)             Requested size: 505.89pt x 115.98119pt.
  [24 <./img/T-Net.png> <./img/PointNetClassification.png>]
-<img/PointNet++.png, id=458, 970.62625pt x 256.96pt>
+<img/PointNet++.png, id=503, 970.62625pt x 256.96pt>
 File: img/PointNet++.png Graphic file (type png)
 <use img/PointNet++.png>
 Package pdftex.def Info: img/PointNet++.png  used on input line 1087.
@@ -959,13 +959,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 1103--1104
 
  []
 
-<img/VoxelNet.png, id=469, 1200.485pt x 350.30875pt>
+<img/VoxelNet.png, id=514, 1200.485pt x 350.30875pt>
 File: img/VoxelNet.png Graphic file (type png)
 <use img/VoxelNet.png>
 Package pdftex.def Info: img/VoxelNet.png  used on input line 1109.
 (pdftex.def)             Requested size: 505.89pt x 147.62044pt.
 [26 <./img/PointNet++.png> <./img/VoxelNet.png>]
-<img/PointRCNN.png, id=481, 1013.7875pt x 268.00125pt>
+<img/PointRCNN.png, id=526, 1013.7875pt x 268.00125pt>
 File: img/PointRCNN.png Graphic file (type png)
 <use img/PointRCNN.png>
 Package pdftex.def Info: img/PointRCNN.png  used on input line 1153.
@@ -981,7 +981,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 1216--1217
  []
 
 [29]
-<img/EpipolarConstraint.png, id=504, 1062.97125pt x 263.98625pt>
+<img/EpipolarConstraint.png, id=549, 1062.97125pt x 263.98625pt>
 File: img/EpipolarConstraint.png Graphic file (type png)
 <use img/EpipolarConstraint.png>
 Package pdftex.def Info: img/EpipolarConstraint.png  used on input line 1272.
@@ -1002,12 +1002,12 @@ Underfull \hbox (badness 10000) in paragraph at lines 1351--1353
  []
 
 [31]
-<img/SuperGlueDifferentiableOptimalmatching.png, id=516, 1253.68375pt x 297.11pt>
+<img/SuperGlueDifferentiableOptimalmatching.png, id=561, 1253.68375pt x 297.11pt>
 File: img/SuperGlueDifferentiableOptimalmatching.png Graphic file (type png)
 <use img/SuperGlueDifferentiableOptimalmatching.png>
 Package pdftex.def Info: img/SuperGlueDifferentiableOptimalmatching.png  used on input line 1412.
 (pdftex.def)             Requested size: 505.89pt x 119.88913pt.
-<img/SuperGlueFeatures.png, id=518, 1134.2375pt x 337.26pt>
+<img/SuperGlueFeatures.png, id=563, 1134.2375pt x 337.26pt>
 File: img/SuperGlueFeatures.png Graphic file (type png)
 <use img/SuperGlueFeatures.png>
 Package pdftex.def Info: img/SuperGlueFeatures.png  used on input line 1429.
@@ -1017,7 +1017,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 1446--1447
 
  []
 
-<img/NeRF.png, id=530, 1337.99875pt x 333.245pt>
+<img/NeRF.png, id=575, 1337.99875pt x 333.245pt>
 File: img/NeRF.png Graphic file (type png)
 <use img/NeRF.png>
 Package pdftex.def Info: img/NeRF.png  used on input line 1452.
@@ -1048,7 +1048,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 1532--1533
  []
 
 [35]
-<img/LidarSnowfall.png, id=550, 569.12625pt x 331.2375pt>
+<img/LidarSnowfall.png, id=596, 569.12625pt x 331.2375pt>
 File: img/LidarSnowfall.png Graphic file (type png)
 <use img/LidarSnowfall.png>
 Package pdftex.def Info: img/LidarSnowfall.png  used on input line 1543.
@@ -1088,13 +1088,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 1582--1583
 
  []
 
-<img/FDA.png, id=557, 817.0525pt x 422.57875pt>
+<img/FDA.png, id=603, 817.0525pt x 422.57875pt>
 File: img/FDA.png Graphic file (type png)
 <use img/FDA.png>
 Package pdftex.def Info: img/FDA.png  used on input line 1594.
 (pdftex.def)             Requested size: 202.3529pt x 104.65143pt.
 [37 <./img/FDA.png>]
-<img/CyCADA.png, id=565, 944.52875pt x 254.9525pt>
+<img/CyCADA.png, id=611, 944.52875pt x 254.9525pt>
 File: img/CyCADA.png Graphic file (type png)
 <use img/CyCADA.png>
 Package pdftex.def Info: img/CyCADA.png  used on input line 1614.
@@ -1114,7 +1114,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 1642--1643
 
  []
 
-<img/AdaptSegNet.png, id=566, 417.56pt x 203.76125pt>
+<img/AdaptSegNet.png, id=612, 417.56pt x 203.76125pt>
 File: img/AdaptSegNet.png Graphic file (type png)
 <use img/AdaptSegNet.png>
 Package pdftex.def Info: img/AdaptSegNet.png  used on input line 1653.
@@ -1159,7 +1159,142 @@ Underfull \hbox (badness 10000) in paragraph at lines 1715--1716
 
  []
 
-[40] [41] (./main.aux)
+[40]
+Underfull \hbox (badness 10000) in paragraph at lines 1747--1748
+
+ []
+
+<img/FrustumPointNets.png, id=629, 732.7375pt x 185.69376pt>
+File: img/FrustumPointNets.png Graphic file (type png)
+<use img/FrustumPointNets.png>
+Package pdftex.def Info: img/FrustumPointNets.png  used on input line 1754.
+(pdftex.def)             Requested size: 354.12144pt x 89.744pt.
+[41 <./img/FrustumPointNets.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 1768--1769
+
+ []
+
+<img/MV3D.png, id=638, 753.81625pt x 315.1775pt>
+File: img/MV3D.png Graphic file (type png)
+<use img/MV3D.png>
+Package pdftex.def Info: img/MV3D.png  used on input line 1774.
+(pdftex.def)             Requested size: 354.12144pt x 148.0613pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 1779--1780
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1781--1784
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1794--1795
+
+ []
+
+
+Overfull \hbox (0.68073pt too wide) in paragraph at lines 1796--1796
+[]\OT1/cmr/bx/n/10 PointPainting (Eearly Fu-sion)\OT1/cmr/m/n/10 : Paint the point clouds (aug-ment via con-cate-na-tion of the li-dar point x,y,z,intensity
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1796--1797
+
+ []
+
+[42 <./img/MV3D.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 1819--1820
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1821--1822
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1823--1824
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1832--1833
+
+ []
+
+
+Overfull \hbox (20.33774pt too wide) in paragraph at lines 1834--1835
+[]\OT1/cmr/bx/n/10 Inputs. $\OML/cmm/m/it/10 k$ \OT1/cmr/m/n/10 2D de-tec-tions $\OML/cmm/m/it/10 P[]$ \OT1/cmr/m/n/10 with $\OML/cmm/m/it/10 p[] \OT1/cmr/m/n/10 = [\OML/cmm/m/it/10 x[]; y[]; x[]; y[]; s[]\OT1/cmr/m/n/10 ]$, and $\OML/cmm/m/it/10 n$ \OT1/cmr/m/n/10 3D de-tec-tions $\OML/cmm/m/it/10 P[]$ \OT1/cmr/m/n/10 with $\OML/cmm/m/it/10 p[] \OT1/cmr/m/n/10 = [\OML/cmm/m/it/10 h; w; l; x; y; z; ^^R; s[]\OT1/cmr/m/n/10 ]$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1834--1835
+
+ []
+
+[43]
+Underfull \hbox (badness 10000) in paragraph at lines 1839--1841
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1842--1843
+
+ []
+
+<img/CLOCs.png, id=651, 858.20625pt x 366.36874pt>
+File: img/CLOCs.png Graphic file (type png)
+<use img/CLOCs.png>
+Package pdftex.def Info: img/CLOCs.png  used on input line 1849.
+(pdftex.def)             Requested size: 354.12144pt x 151.17369pt.
+<img/CenterFusion.png, id=652, 722.7pt x 216.81pt>
+File: img/CenterFusion.png Graphic file (type png)
+<use img/CenterFusion.png>
+Package pdftex.def Info: img/CenterFusion.png  used on input line 1869.
+(pdftex.def)             Requested size: 354.12144pt x 106.23782pt.
+[44 <./img/CLOCs.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 1874--1875
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1880--1881
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1890--1891
+
+ []
+
+<img/CRFNET.png, id=663, 563.10374pt x 290.08376pt>
+File: img/CRFNET.png Graphic file (type png)
+<use img/CRFNET.png>
+Package pdftex.def Info: img/CRFNET.png  used on input line 1895.
+(pdftex.def)             Requested size: 354.12144pt x 182.42618pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 1900--1901
+
+ []
+
+[45 <./img/CenterFusion.png> <./img/CRFNET.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 1910--1911
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1916--1917
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1918--1919
+
+ []
+
+[46] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1169,21 +1304,21 @@ L3 programming layer <2026-01-19>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: F50B5C951273084696EF4E40D59BBA67;10835.
+(rerunfilecheck)             Checksum: C08F1F539FF60B334410B2DA3A937C82;13048.
  ) 
 Here is how much of TeX's memory you used:
- 26793 strings out of 467525
- 501701 string characters out of 5418982
- 904682 words of memory out of 5000000
- 55106 multiletter control sequences out of 15000+600000
- 645280 words of font info for 106 fonts, out of 8000000 for 9000
+ 26878 strings out of 467525
+ 503322 string characters out of 5418982
+ 905192 words of memory out of 5000000
+ 55163 multiletter control sequences out of 15000+600000
+ 645958 words of font info for 108 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,17n,94p,822b,768s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbxti10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm7.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb>
-Output written on main.pdf (41 pages, 12768913 bytes).
+Output written on main.pdf (46 pages, 15102535 bytes).
 PDF statistics:
- 724 PDF objects out of 1000 (max. 8388607)
- 573 compressed objects within 6 object streams
- 171 named destinations out of 1000 (max. 500000)
- 545 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 818 PDF objects out of 1000 (max. 8388607)
+ 651 compressed objects within 7 object streams
+ 197 named destinations out of 1000 (max. 500000)
+ 642 words of extra memory for PDF output out of 10000 (max. 10000000)
 
