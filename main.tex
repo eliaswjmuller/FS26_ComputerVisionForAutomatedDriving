@@ -81,7 +81,7 @@
 \section{Part I: Fundamentals}
 \subsection{Definitions}
 \begin{definition}[Computer Vision]
-Inverse algorithmic process to infer properties of the world based on sensory observations.
+Inverse algorithmic process to infer properties of the world and of optical sensors based on sensory observations.
 \end{definition}
 \begin{definition}[Autonomous Car (ADS-DV)]
 ADS-equipped vehicle designed for driverless operation within its given operational design domain.
@@ -140,7 +140,7 @@ Real beams diverge; receivers have finite FOV. Two configurations:
 \begin{itemize}
     \item \textit{Coaxial}: transmitter and receiver share a common optical axis.
     \item \textit{Bistatic}: optical axes of transmitter and receiver are parallel but offset.
-     The \textbf{crossover function} $\xi(R) \in [0,1]$ gives the fraction of the illuminated area observed by the receiver as a function of range. For bistatic: $\xi(R)=0$ at short range (no crossover), $\xi(R)=1$ beyond some $R_2$ (full crossover).
+     The \textbf{crossover function} $\xi(R) \in [0,1]$ gives the fraction of the illuminated area observed by the receiver as a function of range. For bistatic: $\xi(R)=0$ for $R<R_1$ (no crossover), $\xi(R)\in(0,1)$ for $R_1<R<R_2$ (partial crossover), $\xi(R)=1$ for $R>R_2$ (full crossover).
 \end{itemize}
 
 \begin{figure}[H]
@@ -286,7 +286,7 @@ Digital imaging pipeline (scene radiance $\to$ optics $\to$ sensor $\to$ ISP $\t
 Two waveform types: fixed-frequency pulses and frequency-modulated continuous wave (FMCW). Output is discretized into $M$ azimuths $\times$ $N$ range bins; per-bin measurement is received power.\\
  
 \textbf{Radar equation}: $P_{\text{received}} = \frac{P_{\text{transmitted}}\, G\, \sigma\, A_e}{16\pi^2\, r^4\, L}$
-where $G$: transmitter gain, $\sigma$: radar cross section (RCS, depends on target area/orientation/material), $A_e$: effective antenna aperture, $L$: loss factor, $r$: range. Note $1/r^4$ decay (vs.\ $1/R_0^2$ for lidar) because radar uses separate opening angles for transmitter and receiver. This is the radar analogue of the pulsed lidar received-power model: it determines how SNR degrades with range and target properties, and thus the sensor's effective detection limits.\\
+where $G$: transmitter gain, $\sigma$: radar cross section (RCS, depends on target area/orientation/material), $A_e$: effective antenna aperture, $L$: loss factor, $r$: range. Note $1/r^4$ decay (vs.\ $1/R_0^2$ for lidar): the wave spreads $\propto 1/r^2$ out to the target and the reflected wave spreads a further $\propto 1/r^2$ back to the receive aperture (two-way spreading). This is the radar analogue of the pulsed lidar received-power model: it determines how SNR degrades with range and target properties, and thus the sensor's effective detection limits.\\
 
 \textbf{FMCW Range and Velocity Measurement}:\\
 \textit{Modulation pattern}: frequency of transmitted signal as a function of time.\\
@@ -340,7 +340,7 @@ Model outputs a logits tensor $\mathbf{Z} \in \mathbb{R}^{H \times W \times C}$.
 \begin{itemize}
     \item \textit{Pixel accuracy}: fraction of correctly classified pixels. Skewed by frequent classes (sky, road).
     \item \textit{IoU (class $c$)}: $\mathrm{IoU}_c = \dfrac{|\hat{P}_c \cap P_c|}{|\hat{P}_c \cup P_c|}$, with $\hat{P}_c, P_c$ the predicted/GT pixel sets.
-    \item \textit{mIoU}: $\frac{1}{C}\sum_c \mathrm{IoU}_c$. More stringent than pixel accuracy; mean over classes prevents large object bias (a wrong prediction will be wrong in all instances).
+    \item \textit{mIoU}: $\frac{1}{C}\sum_c \mathrm{IoU}_c$. More stringent than pixel accuracy; mean over classes prevents frequent/large classes (sky, road) from dominating the score, unlike pixel accuracy.
 \end{itemize}
 
 \subsubsection{Exemplar Driving Datasets}
@@ -446,7 +446,8 @@ Single forward pass from $\mathbf{I}$ to full label map $\hat{\mathbf{Y}}$. Goal
 \paragraph{Three Challenges.} (I) \textit{Reduced feature resolution} from repeated striding/pooling, (II) \textit{Multi-scale objects}, (III) \textit{Reduced localization accuracy} from CNN invariance
 
 \paragraph{Fully Convolutional Networks (FCN).}
-Replace the FC layers of a classification network with convolutional layers $\Rightarrow$ coarse high-level feature maps at low resolution. Per-pixel prediction at original image resolution then requires upsampling.
+Replace the FC layers of a classification network with convolutional layers $\Rightarrow$ coarse high-level feature maps at low resolution. Per-pixel prediction at original image resolution then requires upsampling.\\
+\textbf{Note:} \textit{No single} modification is strictly necessary in every case to repurpose a classification CNN for segmentation -- removing all pooling, replacing strided convs with stride-1, or adding one unpooling layer per pooling layer are each \textit{options}, none mandatory (resolution can be recovered by other means).
 
 \paragraph{Naive Resolution Recovery.}
 Remove pooling/striding entirely. Requires larger kernels for the same receptive field; every feature map $\mathbf{z}_\ell$ stays at $HW$ instead of shrinking geometrically, so activation memory $\sum_\ell H_\ell W_\ell d_\ell = HW \sum_\ell d_\ell$ scales linearly with depth (no geometric decay), and the same factor inflates per-layer FLOPs $\Rightarrow$ heavy compute/memory cost and overfitting risk.
@@ -461,7 +462,7 @@ Remove pooling/striding entirely. Requires larger kernels for the same receptive
 \paragraph{In-Network Upsampling.}
 \subparagraph{Unpooling.} During encoder max-pooling, store argmax positions in \textit{switch variables}; in the decoder, place each activation back at its recorded location. Produces an enlarged but \textit{sparse} feature map. Not learnable + symetric architecture for corresponding pairs.
 
-\subparagraph{Transpose Convolution (Deconvolution).} Learnable upsampling for dense feature maps. Each input scalar weights a copy of the kernel; the weighted kernel is placed into the output at a location determined by the input position and the stride. Where output positions overlap across different input pixels, the contributions are summed. (Crop might be required to get exact target size)
+\subparagraph{Transpose Convolution (Deconvolution).} Learnable upsampling for dense feature maps. Each input scalar weights a copy of the kernel; the weighted kernel is placed into the output at a location determined by the input position and the stride. Where output positions overlap across different input pixels, the contributions are summed. (Crop might be required to get exact target size.) Output spatial size (per dim): $H_{\mathrm{out}} = (H_{\mathrm{in}}-1)\,s + m - 2P$, so \textit{increasing the stride} or \textit{decreasing the padding} (or increasing the kernel size) all \textit{increase} the output.
 
 \begin{figure}[H]
     \centering
@@ -485,9 +486,9 @@ Symmetric encoder--decoder with \textit{skip connections}: at each decoder stage
 \paragraph{Atrous (Dilated) Convolution.}
 The \textit{effective} receptive field is smaller than the formal one: border connections are sparse. Atrous convolution inserts holes between kernel taps. For kernel $\mathbf{K} \in \mathbb{R}^{m \times n}$ and rate $r$:
 \begin{equation*}
-    (\mathbf{X} *_r \mathbf{K})[p, q] = \sum_{i=1}^{m} \sum_{j=1}^{n} X[p+ri,\, q+rj]\, K[i, j].
+    (\mathbf{X} *_r \mathbf{K})[p, q] = \sum_{i=1}^{m} \sum_{j=1}^{n} X[p+r(i-1),\, q+r(j-1)]\, K[i, j].
 \end{equation*}
-Standard convolution corresponds to $r=1$. Stacking atrous convolutions with growing $r$ yields \textit{exponential} expansion of receptive field size without resolution loss or coverage gaps and fixed number of weights. We use 0-inserts to retain tensor calculations.\\ 
+Standard convolution corresponds to $r=1$. Stacking atrous convolutions with growing $r$ yields \textit{exponential} expansion of receptive field size without resolution loss or coverage gaps and fixed number of weights. We use 0-inserts to retain tensor calculations. Changing \textit{only} the rate $r$ alters \textbf{only the receptive field}: the number of parameters, the FLOPs, and the stride are all unchanged.\\ 
 
 \begin{figure}[H]
     \centering
@@ -560,7 +561,7 @@ So the classifier only ever sees some number of potentially high quality regions
 
 \paragraph{R-CNN}
 \begin{enumerate}
-    \item \textbf{RPN:} off-the-shelf region proposal network (trained disjoint from this architecture).
+    \item \textbf{Region Proposals:} off-the-shelf proposal algorithm (selective search / Edge Boxes / MCG) -- \textit{not} a learned network (the RPN is Faster R-CNN's innovation), and trained disjoint from this architecture.
     \item \textbf{Crop \& Warp} the patches for fixed network input size
     \item \textbf{Forward} through network for feature map $\rightarrow$ VERY SLOW per-region pass required ($\approx 2000$)
     \item \textbf{Linear Object Classifier} plus a parallel \textbf{Box Regressor} for a refined proposal localization
@@ -569,7 +570,7 @@ So the classifier only ever sees some number of potentially high quality regions
 \paragraph{Fast R-CNN}
 \begin{enumerate}
     \item \textbf{FCN transformation} of input into featurized repr. $f_I = f(I)$
-    \item unchanged RPN $r(I) \rightarrow$ Region Proposals have VERY POOR RECALL and are slow 
+    \item unchanged off-the-shelf region proposals $r(I) \rightarrow$ still the bottleneck: slow and limited recall (this is the motivation for Faster R-CNN)
     \item \textbf{RoI Pooling} for a featurized repr of each proposal $g_i = g(f_I,r_i)$: project proposal to feature-map coords (divide by FCN stride $s$), snap fractional coords to integer feature-map cells, split into fixed $k\times k$ grid, max-pool per bin $\rightarrow$ fixed $k\times k\times C$ output regardless of proposal size.
     \item \textbf{ConvNet/MLP} for preprocessing per proposal feature (input already has lower spatial resolution since we use feature maps) $\rightarrow h(g_i)$
     \item \textbf{Multiple Heads} can be attached to these feature maps for task-specific predictions.
@@ -683,7 +684,7 @@ We can use DETR to \textit{generate direct box predictions}.
 \end{definition}
 
 \subsubsection{Mask R-CNN}
-We still evolve the R-CNN lineage. The idea is not to \textit{detect-then-segment}. 
+We still evolve the R-CNN lineage. The idea is now to \textit{detect-then-segment}.
 \vspace{-10px}
 \begin{figure}[H]
     \centering
@@ -703,7 +704,7 @@ Core Adaptations of the Mask R-CNN:
         \item Subdivide into a $k\times k$ grid of bins -- \textit{do not snap} boundaries.
         \item Inside each bin, place a fixed number of \textit{sample points} at exact fractional positions (e.g. uniform $2\times 2$ = 4 samples per bin).
         \item For each sample, get its feature value via \textbf{bilinear interpolation} from the 4 nearest feature-map lattice points (features are treated as living at grid \textit{junctions}, not cell centers).
-        \item Bin output = \textit{average} of the 4 interpolated samples.
+        \item Bin output = \textit{average} of that bin's sample points $\rightarrow$ output spatial size $= k\times k$ (the number of \textit{bins}), \textit{independent} of how many sample points each bin averages.
     \end{enumerate}
     Output is still $k\times k\times C$, but spatially faithful and \textit{differentiable} w.r.t. RoI coordinates (RoIPool is not). Key for masks: $14\times 14$ / $28\times 28$ mask predictions are later resized to the image-space RoI and thresholded at $0.5$, so any RoIPool-style quantization error would propagate directly to mask boundaries.
 \end{itemize}
@@ -737,7 +738,7 @@ For each pixel $i$: \texttt{(class, instance count (if countable))}. Contrary to
 
 
 \paragraph{Panoptic Quality (PQ).}
-\textbf{Fundamental Principle:} Each GT segment can have at most one corresponding predicted segment with $IoU > 0.5$ and vice versa. Thus matching is unique and finding it is simply \textit{the first match with IoU $> 0.5$}.\\
+\textbf{Fundamental Principle:} Each GT segment can have at most one corresponding predicted segment with $IoU > 0.5$ and vice versa. Thus matching is unique and finding it is simply \textit{the first match with IoU $> 0.5$}. Matching uses \textit{only} IoU $>0.5$ -- the raw instance IDs are arbitrary and ignored, so a predicted segment's ID need \textit{not} equal the GT segment's ID for them to match.\\
 $$
 \text{PQ} = \frac{\sum_{(p,g) \in TP} \text{IoU}(p,g)}{|TP| + \tfrac{1}{2}|FP| + \tfrac{1}{2}|FN|} \qquad \text{for a single class}
 $$
@@ -968,7 +969,7 @@ Classical four-step process: (I) matching cost, (II) cost aggregation, (III) opt
 \begin{itemize}
     \item \textbf{Siamese 2D conv} -- shared-weight feature extractor on both images $\rightarrow$ learned per-pixel descriptors (replaces hand-crafted matching cost of step I).
     \item \textbf{Cost volume} (a.k.a.\ \textit{correlation layer}) -- \textit{no learnable parameters}; a fixed construction that for every $(u,v)$ and candidate disparity $d$ combines $f_L(u,v)$ with $f_R(u-d, v)$ -- by concatenation ($H\times W\times (D_{\max}+1)\times 2C$) or dot product ($H\times W\times (D_{\max}+1)$). Built in \textit{both directions} (L$\rightarrow$R and R$\rightarrow$L) $\rightarrow$ two cost volumes, one anchored per image, enabling downstream left-right consistency / occlusion reasoning. Still differentiable $\rightarrow$ gradients flow back into the Siamese features. It is the \textit{inductive bias} of the architecture (only same-row, fixed-shift pairs are considered).
-    \item \textbf{Multi-scale 3D conv / 3D deconv} -- propagates context across spatial \textit{and} disparity dimensions $\rightarrow$ cost aggregation + optimization (steps II+III). \textit{Why 3D conv, not 2D?} 2D conv would slice across $(H,W)$ per disparity independently, decimating the disparity axis; 3D conv treats $D$ as a proper spatial dim and preserves it. Geometry-motivated design, not a black box. Output: a refined cost volume reduced to a \textit{single feature channel} -- $H\times W\times (D_{\max}+1)$ scalar costs.
+    \item \textbf{Multi-scale 3D conv / 3D deconv} -- propagates context across spatial \textit{and} disparity dimensions $\rightarrow$ cost aggregation + optimization (steps II+III). \textit{Why 3D conv, not 2D?} 2D conv would slice across $(H,W)$ per disparity independently, decimating the disparity axis; 3D conv treats $D$ as a proper spatial dim and preserves it. So the cost volume / 3D-conv tensor has \textbf{three spatial dimensions} ($H\times W\times$ disparity) plus channels -- \textit{not} two spatial dims with disparity playing the role of the channel axis. Geometry-motivated design, not a black box. Output: a refined cost volume reduced to a \textit{single feature channel} -- $H\times W\times (D_{\max}+1)$ scalar costs.
     \item \textbf{Soft argmax / soft argmin} -- differentiable disparity selection (step III). A hard argmin over costs would (i) only allow integer disparities $\rightarrow$ quantized depth and (ii) make the loss \textit{fragile}: a prediction one off from GT incurs the same loss as one completely off (no gradient pointing toward correct). Instead treat costs as negated logits, softmax over the disparity axis, take the convex combination:
     $\hat d[i,j] = \sum_{D=0}^{D_{\max}} D \cdot \mathrm{softmax}_D(-C[i,j,D])$
     $\rightarrow$ continuous, sub-pixel disparity that flows gradients smoothly. Final loss: $L_1$ regression 
@@ -1020,7 +1021,7 @@ $p_s \sim K\, \hat T_{t\rightarrow s}\, \hat D_t(p_t)\, K^{-1} p_t$
 \paragraph{PointNet.}
 Point Cloud based end-to-end learning for \textit{scattered, unordered, sparse, noisy} point data for various tasks. Challenges caused by the data foundation:
 \begin{itemize}
-    \item \textbf{Unordered} input point set: Model requires invariance to $\text{N}!$ permutations (N orderless points). This can be achieved via \textit{Symmetric Functions} (c.f. GNNs): Trivial Solution is the \textit{MLP with max pooling} (across features): $f(x_1, \dots, x_n) = \gamma \circ g(h(x_1), \dots, h(x_n))$ symmetric if $g$ is symmetric:\\
+    \item \textbf{Unordered} input point set: Model requires invariance to $\text{N}!$ permutations (N orderless points). This can be achieved via \textit{Symmetric Functions} (c.f. GNNs): Trivial Solution is the \textit{MLP with max pooling} (\textbf{across points}, i.e.\ the max is taken over the $N$ points \textit{per feature dimension} -- NOT across features for each point; this is what yields permutation invariance): $f(x_1, \dots, x_n) = \gamma \circ g(h(x_1), \dots, h(x_n))$ symmetric if $g$ is symmetric:\\
     $\underbrace{x}_{\text{input}} \rightarrow \underbrace{\texttt{MLP}(x_i)}_{h} \rightarrow \underbrace{\texttt{max\_pool}}_{g} \rightarrow \underbrace{\texttt{MLP}}_{\gamma} \qquad $ the symmetric $g$ (max-pool) is what ensures permutation invariance; $\gamma$ just maps the aggregated feature to the output
     \item \textbf{Geometric Transformation Invariance}: rotations / Euclidean transformations must not alter results. Solution: \textbf{T-Net} -- a mini vanilla PointNet whose output is a transformation \textit{matrix} (not a class score), applied by matrix-mult to align inputs to a \textit{canonical space}. Used twice: $3\times 3$ on raw $n\times 3$ points (\textit{input} T-Net), $64\times 64$ on intermediate $n\times 64$ features (\textit{feature} T-Net). Data-dependent $\rightarrow$ no hard-coded rotations.
 \end{itemize}
@@ -1077,7 +1078,7 @@ Hierarchical structure = a stack of \textit{set abstraction} levels, each repeat
 \begin{enumerate}
     \item \textbf{Sampling Layer:} \textit{Iterative Farthest Point Sampling} (FPS) -- given the current sampled set $S$, the next point is $x_\text{next} = \arg\max_{x \notin S} \min_{s \in S} \lVert x - s\rVert$ (the unsampled point whose \textit{nearest sampled neighbor} is farthest) $\rightarrow$ each new point fills the largest gap $\rightarrow$ \textit{better coverage} than random sampling.
     \item \textbf{Grouping Layer:} For each centroid, run ball query (or K-NN) $\rightarrow$ output groups $N' \times K \times (d+C)$. $K$ varies per group (ball query is radius-based); the next PointNet collapses the variable-$K$ axis to a fixed-length feature via max-pool.
-    \item \textbf{PointNet Layer:} Apply PointNet inside each group, taking points \textit{relative} to the centroid $\rightarrow$ one feature per centroid (the analog of one convolution output).
+    \item \textbf{PointNet Layer:} Apply a PointNet (\textit{weights shared across all groups of this abstraction level}, like a conv kernel reused across positions) inside each group, taking points \textit{relative} to the centroid $\rightarrow$ one feature per centroid (the analog of one convolution output).
 \end{enumerate}
 Stacking: $N$ points $(x,y) \rightarrow N_1$ anchors $(x,y,\mathbf{f}) \rightarrow N_2$ anchors $(x,y,\mathbf{f}')\rightarrow \dots$ -- fewer points, richer features per level (CNN-style downsampling). Two limitations of vanilla PointNet are fixed: (i) each anchor's feature now \textit{sees its local neighborhood} $\rightarrow$ hierarchical local context; (ii) since inner PointNets see \textit{relative} coordinates, the features are translation-invariant.
 
@@ -1164,7 +1165,7 @@ $$L = \alpha\, \tfrac{1}{N_{\text{pos}}}\sum_i L_{\text{cls}}(p_i^{\text{pos}}, 
         \item \textbf{Hybrid loss}: cross-entropy on bin indices (coarse localization) + smooth-$L_1$ on residuals (fine offset), averaged over positive proposals. \textit{No objectness loss}: proposals come from foreground points, so they're always positive by construction.
         \item \textit{Why}: classification is more \textit{robust for coarse localization} than direct regression -- splitting into coarse-class + fine-residual stabilizes training, especially for far/sparse points.
     \end{itemize}
-    \item \textbf{Canonical Transformation} (stage-2 refinement): for each proposal, transform its pooled points into a \textit{box-local} Canonical Coordinate System (CCS) -- origin at the proposal center, axes aligned with its orientation. Each proposal gets its own CCS.
+    \item \textbf{Canonical Transformation} (stage-2 refinement): for each proposal, transform its pooled points into a \textit{box-local} Canonical Coordinate System (CCS) -- origin at the proposal center, axes aligned with its orientation. Each proposal gets its own CCS. This frees the refinement layers from having to abstract away the proposal's \textbf{3 translational DOF} (its center) and its \textbf{rotational DOF around the vertical axis} (its yaw).
     \begin{itemize}
         \item \textit{Why}: removes the proposal's global pose dependency $\rightarrow$ all boxes look alike in their own frame $\rightarrow$ refinement network learns local geometry consistently across proposals.
         \item \textit{What is transformed vs kept global}: only the raw spatial coordinates of pooled points are canonicalized; the \textit{semantic/high-level features} from stage 1 stay in the original frame (they encode global scene context).
@@ -1909,7 +1910,7 @@ Built on \textbf{CenterNet} (objects as center points). Pipeline:
 \end{itemize}
 \textbf{Scaling issue.} Naive pairwise feature exchange scales \textbf{quadratically} with the number of modalities (memory \& compute). Cross-attention only handles \textbf{two streams} --- a \textit{main} stream (queries) and an \textit{auxiliary} one (keys/values) --- so the open question is how to apply it efficiently to an \textbf{arbitrary number} of modalities.\\
 
-\textbf{HRFuser} answers this: a \textbf{modular} multi-resolution architecture (generalizes \textbf{HRNet} to multiple modalities) with \textbf{camera as primary} and extra sensors as additional branches. Fusion uses \textbf{multi-window cross-attention (MWCA)} blocks whose \textbf{parallel cross-attention} (camera as query, each extra sensor as keys/values, run in parallel) scales to an \textbf{arbitrary number} of sensors --- avoiding the quadratic blow-up.
+\textbf{HRFuser} answers this: a \textbf{modular} multi-resolution architecture (generalizes \textbf{HRNet} to multiple modalities) with \textbf{camera as primary} and extra sensors as additional branches. Fusion uses \textbf{multi-window cross-attention (MWCA)} blocks whose \textbf{parallel cross-attention} (camera as query, each extra sensor as keys/values, run in parallel) scales to an \textbf{arbitrary number} of sensors --- avoiding the quadratic blow-up. Three design choices drive its \textbf{efficiency}: (i) the lower-resolution, higher-dimension feature maps are computed \textit{only} for the primary camera modality (not the others); (ii) parallel cross-attention keeps the non-primary modalities from attending to \textit{each other} (only camera$\leftrightarrow$sensor, never sensor$\leftrightarrow$sensor); (iii) cross-attention is applied within \textit{multiple disjoint spatial windows}.
 
 \subsection{Visual Grounding, Anomaly Segmentation, and Vehicle-to-Vehicle Communication}
 \subsubsection{Visual Grounding}
@@ -1922,13 +1923,150 @@ Built on \textbf{CenterNet} (objects as center points). Pipeline:
     \item \textbf{Referral-based 3D localization:} detect the referred object \textit{directly} from the point cloud.
     \item \textbf{Referral-based 3D identification:} \textit{classify} which of the \textit{given} boxes (all objects of the referred class) is the referred one.
 \end{itemize}
-\textit{Localization is harder} than identification: it must \textbf{detect} multiple candidates across \textit{several} classes (not just the referred class) \textit{and} \textbf{discriminate} the referred object from all other candidates.
+\textit{Localization is harder} than identification: it must \textbf{detect} multiple candidates across \textit{several} classes (not just the referred class) \textit{and} \textbf{discriminate} the referred object from all other candidates.\\
+
+\textbf{Grounding-by-detection framework.} Two backbones --- a \textbf{language} backbone (word embeddings) and a \textbf{visual 3D} backbone $\rightarrow$ \textbf{proposal generation} --- feed a \textbf{verbo-visual fusion} module that outputs per-proposal \textbf{confidence scores}; box regression / mask generation then yields the grounded box or instance mask.
+
+\paragraph{3DVG-T (Verbo-Visual Fusion via Transformers).}
+Fuse via \textbf{cross-attention} between $L$ word embeddings and $M$ 3D proposal embeddings (same dimensionality). \textbf{Interlaced} self- and cross-attention layers, several pairs \textbf{cascaded} $\rightarrow$ information flows both \textit{between proposals} (self-attn) and \textit{across proposals$\leftrightarrow$words} (cross-attn) $\rightarrow$ object confidence scores.
+
+\paragraph{Challenge in 3D --- View Dependency.}
+Relational \textbf{spatial specifications} ("on the left of") \textit{depend on the annotator's viewpoint}, which is \textit{dynamic} during annotation $\rightarrow$ \textbf{ambiguity} in the language$\to$object association. Relevant for AD: passengers have varying viewing directions. Two solutions below.
+
+\paragraph{MVT-3DVG (Multi-View Transformer).}
+\textit{Idea:} make grounding \textbf{view-robust} by aggregating over \textbf{multiple views}. Generate $N$ rotated versions of the cloud about the \textbf{vertical axis}, $S^j=R(\theta_v^j)\,S$ with $\theta_v^j=\tfrac{2\pi(j-1)}{N}$, and aggregate with a \textbf{permutation-invariant} $g$: $\mathrm{VG}(S,Q)=g(f(S^1,Q),\dots,f(S^N,Q))$.\\
+\textit{Problem:} processing $N$ clouds end-to-end is \textbf{expensive}. \textit{Fix --- decouple:} (i) point-cloud features (affine-\textbf{invariant}) are extracted \textbf{once per object} ($x_i=\mathrm{LN}(W_x\,\text{PointNet++}(pc_i))$) and \textbf{shared} across views; (ii) only object \textit{centers} are rotated per view to give view-specific \textbf{positional} embeddings $\mathrm{PE}(b_i^j)$; combine $o_i^j=x_i+\mathrm{PE}(b_i^j)$.
+
+\paragraph{ConcreteNet (Learned Camera Embedding).}
+\textit{Idea:} resolve view dependency with a \textbf{learned camera embedding} inside attentive verbo-visual fusion, supervised on the predicted \textbf{camera position} $\mathbf t$ at train time ($\mathcal L_{\text{camera}}=\lVert\mathbf t-\mathbf t^*\rVert$). \textit{Why only position:} the camera always looks \textit{at} the scene and higher scene parts map to higher pixels, so rotation (look-at, roll) adds little signal. Two more components:
+\begin{itemize}
+    \item \textbf{Bottom-up attentive fusion:} \textbf{3D masked attention} with \textbf{spherical masks} $\mathbf M_l$ of \textit{increasing} radius $r_l$ to progressively aggregate wider context ($\mathbf M_l(i,j)=0$ if $\lVert o_i-o_j\rVert<r_l$, else $-\infty$).
+    \item \textbf{Verbo-visual contrast:} instance-level contrastive loss (NT-Xent) with the \textit{language} embedding as anchor, the \textit{true} referred instance as positive, all other instances as negatives $\rightarrow$ structures a joint embedding space.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{img/ConcreteNet.png}
+    \caption{ConcreteNet}
+    \label{fig:ConcreteNet}
+\end{figure}
 
 \subsubsection{Anomaly Segmentation}
+\textit{Goal (outlier-aware perception):} flag \textbf{out-of-distribution (OOD)} pixels --- objects of \textit{unknown} classes that standard segmentation silently mislabels as a known class. Predict a \textbf{soft dense anomaly map} in $[0,1]$.\\
+
+\textbf{Evaluation \& inference.} Threshold the map at many values $\rightarrow$ precision/recall $\rightarrow$ \textbf{AP} (overall metric); \textbf{FPR95} (false-positive rate at $95\%$ recall) matters for safety. At inference: either fix a threshold for \textbf{hard anomaly masks} (combined with in-distribution predictions), or keep the \textbf{soft map} as uncertainty for downstream planning.\\
+
+\textbf{Training regime.} Anomalies are OOD $\rightarrow$ \textit{cannot} be assumed seen at training. Two families:
+\begin{itemize}
+    \item \textbf{Discriminative:} train \textit{only} on in-distribution data, condition the model to expose uncertainty.
+    \item \textbf{Generative:} additionally train on \textbf{auxiliary negative data} (typically synthetic) --- still no access to the real test-time outlier distribution.
+\end{itemize}
+
+\paragraph{Bayesian DeepLab (Discriminative --- Uncertainty).}
+Decompose total uncertainty into \textbf{epistemic} (model) $+$ \textbf{aleatoric} (data); anomalies $\leftrightarrow$ high \textbf{epistemic} uncertainty. A single deterministic pass can't estimate it $\rightarrow$ \textbf{MC dropout}: $T$ forward passes with randomly dropped neurons.
+\begin{itemize}
+    \item \textbf{Total} $=$ predictive entropy of the mean output, $\mathbb H(\mathbf y|\mathbf x)=\sum_c -\big(\tfrac1T\sum_t y_c^t\big)\log\big(\tfrac1T\sum_t y_c^t\big)$.
+    \item \textbf{Epistemic} $=$ mutual information $=$ total $-$ \textit{aleatoric} (mean per-pass entropy $\tfrac1T\sum_t\sum_c -y_c^t\log y_c^t$); \textbf{high $\Rightarrow$ outlier}.
+\end{itemize}
+
+\paragraph{Image Resynthesis (Generative).}
+\textit{Idea:} a segmentation net trained on in-distribution data labels an outlier as some \textit{known} class; \textbf{resynthesize} the image from those predicted labels with a \textbf{conditional GAN} (trained on paired in-distribution image$+$labels) $\rightarrow$ \textbf{anomalous regions are reconstructed poorly} (their labels are wrong). Detect the mismatch:
+\begin{itemize}
+    \item \textbf{Discrepancy network:} compares input image, predicted labels, and resynthesized image. A naive input$-$resynthesis pixel difference fails (the GAN globally shifts appearance).
+    \item \textbf{Training data} (no real outliers needed): take a GT label map, \textit{replace some instances with random labels}, resynthesize, and train the detector to recover the altered pixels.
+    \item \textbf{Architecture:} \textbf{three-stream} (input \& resynthesized images via shared-weight VGG16, labels via CNN), U-Net multi-resolution; feed \textbf{correlations} between input and resynthesized features to the decoder --- \textit{correlation is low in anomalous regions}.
+\end{itemize}
+
 \subsubsection{Vehicle-to-Vehicle Communication for Perception}
+\textit{Motivation:} single-car perception fails on \textbf{heavily occluded / far} objects (sparse observations). Multiple AVs in the \textbf{same area} can \textbf{share} perception $\rightarrow$ \textbf{see behind occlusions} \& extend range. Increasingly relevant as adoption grows (AVs no longer sparse).
 
+\paragraph{V2VNet (Multi-Agent Deep Fusion).}
+Each car: point cloud $\rightarrow$ LiDAR conv $\rightarrow$ \textbf{compressor} $\rightarrow$ \textbf{broadcast} a message; on receipt $\rightarrow$ \textbf{decompressor} $\rightarrow$ \textbf{cross-vehicle aggregation} $\rightarrow$ output net. A message carries $(\Delta t,\ \Delta p,\ \hat z)$: \textbf{time delay}, \textbf{relative pose}, and an \textbf{intermediate representation}. Practical constraints: \textbf{limited bandwidth} (maximize message informativeness under budget) and \textbf{time delay / no synchronization / changing relative pose} across vehicles.\\
 
+\textbf{What to transmit? (early vs.\ deep vs.\ late).}
+\begin{itemize}
+    \item \textbf{Raw measurements} (early): minimal info loss, but \textbf{large volume} + expensive processing on each receiver.
+    \item \textbf{Perception outputs} (late, e.g.\ 3D boxes): \textbf{tiny volume}, but no scene context/features or uncertainty.
+    \item \textbf{Intermediate representation} (deep, V2VNet's choice): relieves the receiver of most processing, densely captures informative features, and is \textbf{amenable to learnable compression} --- best trade-off.
+\end{itemize}
+
+\textbf{Results.} V2VNet's deep fusion \textbf{beats} no/LiDAR/output fusion in 3D detection, especially for \textbf{sparsely-covered} objects; with learned compression (\textit{Ballé}) it reaches near-full AP at \textbf{$\sim$0.02\,MB} (vs.\ $10$\,MB raw); and it is \textbf{robust to transmission time delays} (output/LiDAR fusion degrade). Qualitatively: detects \textbf{occluded} cars and extends \textbf{effective range}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{img/V2VNet.png}
+    \caption{V2VNet}
+    \label{fig:V2VNet}
+\end{figure}
+
+\newpage
 
 \section{Part V: Temporal Perception}
+\subsection{Multiple Object Tracking}
+\textbf{Definition (2D monocular MOT).} In an input video, \textbf{detect} all appearances of each object (predefined classes) across frames and \textbf{group} the detections of each object into a distinct set, by assigning the same unique \textbf{ID} to all of them.
+
+\subsubsection{Tracking by Detection (Classical)}
+The dominant classical paradigm; detection is off-the-shelf (e.g.\ Faster R-CNN; datasets even provide \textit{public detections}), so research focuses on \textbf{feature extraction} and \textbf{data association}. Pipeline:
+\begin{enumerate}
+    \item \textbf{Object detection} per frame.
+    \item \textbf{Feature extraction} (appearance $+$ motion) per detection.
+    \item \textbf{Affinity computation} between detections.
+    \item \textbf{Association} of the detections that pertain to the same object.
+\end{enumerate}
+
+\paragraph{Baseline.} (1) per-frame detector; (2) motion feature via a \textbf{Kalman filter} predicting boxes across consecutive frames; (3) data association as optimal \textbf{bipartite matching} between predicted boxes (from previous frames) and detected boxes (current frame), e.g.\ the \textbf{Hungarian algorithm} (same setup as DETR's matching).
+
+\paragraph{MOT Metrics.}
+\textbf{(1) Error-type metrics:} \textbf{MT} (mostly tracked: GT trajectories correct in $\ge80\%$ of frames), \textbf{Fragments} (hypotheses covering $\le80\%$ of a GT trajectory), \textbf{ML} (mostly lost: correct in $<20\%$), \textbf{False trajectories} (no real object), \textbf{ID switches} (object tracked but its ID erroneously changes).\\
+\textbf{(2) Summarizing --- MOTA.} Match object $o_i$ \& hypothesis $h_j$ by IoU, with \textit{continuity} (a match carried from $t-1$ is prioritized even over a higher-IoU match: if matched at $t-1$ and $\mathrm{IoU}\ge0.5$ at $t$, keep it); remaining matched by $0.5$-IoU. With FN, FP, ID switches (IDSW):
+\begin{equation*}
+\text{MOTA} = 1 - \frac{\text{FN}+\text{FP}+\text{IDSW}}{\text{GT}} \in (-\infty, 1].
+\end{equation*}
+
+\paragraph{Siamese CNNs for Feature Extraction \& Affinity.}
+\textit{Idea:} learn deep features that \textbf{classify whether a pair of detections is the same object}. Positive pairs $=$ same GT track at limited temporal distance; negatives $=$ different tracks, or true$+$false-positive, or two false positives (FP boxes sampled randomly without overlap with true detections). Input: \textbf{appearance $I$ $+$ optical flow $O$} ($5$ channels per detection, fixed size, \textbf{Siamese junction at the start}). Siamese deep features $+$ \textbf{contextual features} (relative size change, position change, velocity) $\rightarrow$ \textbf{gradient-boosting / random-forest} classifier $\rightarrow$ matching score in $[0,1]$. (Developed for multi-pedestrian, a well-defined class.)
+
+\paragraph{Data Association via Linear Programming (Max-Flow).}
+Detections $\mathcal D=\{\mathbf d_i^t=(x,y,t)\}$; a trajectory $T_k=\{\mathbf d_{k_1}^{t_1},\dots\}$ is an ordered list of detections. Find the set of trajectories $\mathcal T^*$ that best explains the detections, as a \textbf{network-flow} LP:
+\begin{equation*}
+\mathcal T^* = \arg\min_{\mathcal T}\ \sum_i C_{\text{in}}(i)f_{\text{in}}(i) + \sum_i C_{\text{out}}(i)f_{\text{out}}(i) + \sum_i C_{\text{det}}(i)f(i) + \sum_{i,j} C_t(i,j)f(i,j),
+\end{equation*}
+with \textbf{flow-conservation} and \textbf{exclusion} constraints; link costs $C_t$ come from the \textbf{Siamese affinity}. \textit{Why the signs:} in/out costs are \textbf{positive} (else the tracker spawns too many trajectories), while detection/link costs are \textbf{negative} (else zero flow $=$ no trajectory would be the trivial optimum).
+
+\paragraph{Limitations of Tracking by Detection.} Association is a mere \textbf{post-processing} step on heuristic similarities; \textbf{detection is single-frame} and decoupled from association; \textbf{temporal modeling is minimal}.
+
+\subsubsection{End-to-End MOT with Transformers (MOTR)}
+\textit{Inspiration --- DETR:} detection $=$ predicting a \textbf{set} of objects. \textbf{MOTR:} MOT $=$ predicting a \textbf{set of object sequences} (each sequence $=$ a track). Two query types:
+\begin{itemize}
+    \item \textbf{Detect queries:} detect \textbf{newborn} objects (standard DETR object queries, \textit{fixed} set).
+    \item \textbf{Track queries:} re-detect objects \textbf{continuing from previous frames}; this set has \textbf{variable length}.
+\end{itemize}
+\textbf{Tracklet-aware label assignment.} \textit{Propagate} track-query assignments directly from the previous frame (each tracked object keeps \textbf{consistent} GT boxes); run \textbf{bipartite matching only between newborn GT objects and detect queries}.\\
+\textbf{Architecture.} Per frame: Enc $\rightarrow$ Dec fed with concatenated detect queries $q_d$ $+$ track queries $q_{tr}$; a \textbf{Query Interaction Module (QIM)} updates the track queries for the next frame. In the decoder self-attention, \textbf{detect queries are discouraged} from focusing on already-tracked objects (interaction with track queries). Training: aggregate single-frame DETR losses over whole clips.\\
+\textbf{Temporal interaction (QIM).} Handles object \textbf{entrance} (filter newborns by score) and \textbf{exit} (drop disappeared tracks); a \textbf{TAN} (Temporal Aggregation Network $=$ MHA over track queries) refines them. Entrance/exit: by GT assignment at training, by score \textbf{thresholding} at inference.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{img/MOTR.png}
+    \caption{MOTR}
+    \label{fig:MOTR}
+\end{figure}
+
+
+\subsection{Motion Prediction}
+\textit{Goal (forecasting):} to plan a trajectory in a dynamic environment we must know \textbf{where obstacles will be}; key for \textbf{trajectory planning}. Typically in \textbf{BEV} space, from detections or tracks.
+
+\paragraph{Classical baselines.}
+\begin{itemize}
+    \item \textbf{Constant velocity:} keep speed \& direction. Good \textit{short-term}; no traffic rules, no social interactions.
+    \item \textbf{Lane-network based:} associate the car with a lane and follow it. Adds \textit{some rules} \& enables \textbf{multimodal} predictions; still no social interactions, velocity must be estimated.
+\end{itemize}
+\textbf{Why social interactions matter:} motion strongly depends on \textit{interactions between drivers}, who \textbf{don't always follow rules} (e.g.\ a car stops to let another pass) $\rightarrow$ learn these interactions from data.
+
+\paragraph{CNN-based prediction.}
+\textbf{Render} the traffic situation with the car of interest \textbf{centered}; a CNN encodes it and an \textbf{FC or RNN} head predicts the trajectory $((X_1,Y_1),\dots,(X_N,Y_N))$. Handling temporal data: render \textbf{past} into frames; optionally add \textbf{past state} $(v,a)$ sequence in \textbf{late fusion} (separate FC); or feed \textbf{multiple frames} to a 2D-3D CNN. \textit{Limitation:} predicts \textbf{one agent} at a time.
+
+\paragraph{RNN-based prediction.}
+Directly use the \textbf{positions} of all cars, encode each sequence with an \textbf{LSTM encoder}, decode the future trajectory with an \textbf{LSTM decoder} (per agent). Model \textbf{social interaction} with a dedicated module (\textbf{social pooling / attention}) inserted \textit{between} encoders and decoders $\rightarrow$ \textbf{simultaneous multi-agent} forecasting. Learned attention heads attend e.g.\ to the front vehicle in the same lane, or the closest front vehicle from any lane.
 
 \end{document}
